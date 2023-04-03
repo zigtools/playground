@@ -1,6 +1,7 @@
 import { Sharer } from "./sharer";
 import { WASI, PreopenDirectory, Fd, File } from "@bjorn3/browser_wasi_shim/dist";
 import { Iovec } from "@bjorn3/browser_wasi_shim/typings/wasi_defs";
+// @ts-ignore
 import zlsWasm from "url:./zls.wasm";
 
 let sharer: Sharer = new Sharer();
@@ -23,26 +24,27 @@ class Stdio extends Fd {
 
     fd_write(view8: Uint8Array, iovs: Iovec[]): { ret: number; nwritten: number; } {
         let nwritten = 0;
-        // console.log("write");
         for (let iovec of iovs) {
             const slice = view8.slice(iovec.buf, iovec.buf + iovec.buf_len);
 
             if (this.kind == StdioKind.stdin) {
                 throw new Error("Cannot write to stdin");
             } else if (this.kind == StdioKind.stdout) {
-                // console.log("stdoutwrite");
-                this.buffer.push(...slice);
+                this.buffer = this.buffer.concat(Array.from(slice));
                 
-                const data = new TextDecoder("utf-8").decode(Uint8Array.from(this.buffer));
-                const bi = data.indexOf("\r\n\r");
-                const ep = data.indexOf("Content-Length", bi);
-                if (bi !== -1) {
-                    try {
-                        var p = JSON.parse(data.slice(bi + 3, ep === -1 ? undefined : ep));
-                        this.buffer.splice(0, data.length);
-                        // console.debug(this.kind, data);
-                        postMessage(p);
-                    } catch {}
+                while (true) {
+                    const data = new TextDecoder("utf-8").decode(Uint8Array.from(this.buffer));
+
+                    if (!data.startsWith("Content-Length: ")) break;
+                    
+                    const len = parseInt(data.slice("Content-Length: ".length));
+                    const bodyStart = data.indexOf("\r\n\r\n") + 4;
+
+                    if (bodyStart === -1) break;
+                    if (this.buffer.length < bodyStart + len) break;
+                    
+                    this.buffer.splice(0, bodyStart + len);
+                    postMessage(JSON.parse(data.slice(bodyStart, bodyStart + len)));
                 }
             } else {
                 this.buffer.push(...slice);
@@ -100,14 +102,6 @@ onmessage = (event) => {
     sharer.lockBuffer = event.data.lockBuffer;
     sharer.stdinBlockBuffer = event.data.stdinBlockBuffer;
     sharer.dataBuffer = event.data.dataBuffer;
-//     const str = JSON.stringify(event.data);
-
-//     const final =
-// `Content-Length: ${str.length}\r
-// \r
-// ${str}`
-
-//     stdin.buffer.push(...new TextEncoder().encode(final));
 };
 
 (async () => {

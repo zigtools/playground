@@ -5,19 +5,20 @@
   "dependencies": {
     "@bjorn3/browser_wasi_shim": "^0.2.7",
     "@codemirror/autocomplete": "^6.4.2",
+    "@codemirror/commands": "^6.2.2",
+    "@codemirror/language": "^6.6.0",
     "@codemirror/lint": "^6.2.0",
     "@codemirror/state": "^6.2.0",
     "@codemirror/tooltip": "^0.19.16",
     "@codemirror/view": "^6.9.3",
-    "@open-rpc/client-js": "^1.8.1",
     "@rollup/plugin-terser": "^0.4.0",
     "@wasmer/wasi": "^1.2.2",
     "codemirror": "^6.0.1",
-    "codemirror-languageserver": "^1.11.0",
-    "vscode-languageserver-protocol": "^3.17.3",
-    "wasi-js": "^1.7.3"
+    "diff-match-patch": "^1.0.5",
+    "vscode-languageserver-protocol": "^3.17.3"
   },
   "devDependencies": {
+    "@types/diff-match-patch": "^1.0.32",
     "@types/node": "^18.15.11",
     "events": "^3.3.0",
     "parcel": "^2.8.3"
