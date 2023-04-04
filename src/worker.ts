@@ -5,6 +5,8 @@ import { Iovec } from "@bjorn3/browser_wasi_shim/typings/wasi_defs";
 import { untar } from "@immutabl3/tar";
 // @ts-ignore
 import zlsWasm from "url:./zls.wasm";
+// @ts-ignore
+import zigTar from "url:./zig.tar";
 
 let sharer: Sharer = new Sharer();
 
@@ -104,7 +106,7 @@ onmessage = (event) => {
 };
 
 async function getLatestZigArchive() {
-    const archive = await (await fetch("zig.tar", {})).arrayBuffer();
+    const archive = await (await fetch(zigTar, {})).arrayBuffer();
     const entries = await untar(archive);
 
     const first = entries[0].path;

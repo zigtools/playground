@@ -36,6 +36,7 @@ export default class ZlsClient extends LspClient {
             const line = document.createElement("div");
             line.innerText = ev.data.stderr;
             document.getElementById("stderr")?.append(line);
+            document.getElementById("stderr")?.scrollTo(0, document.getElementById("stderr")?.scrollHeight!);
             return;
         }
 

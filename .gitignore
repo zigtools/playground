@@ -1,5 +1,5 @@
 /node_modules
 /dist
 /.parcel-cache
-/zig.tar
-/src/zls.wasm
+zig.tar
+zls.wasm
