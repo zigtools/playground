@@ -1,0 +1,36 @@
+name: Deploy
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - run: wget https://zig.pm/zls/downloads/wasm32-wasi/bin/zls.wasm -O src/zls.wasm
+
+      - run: curl $(curl https://ziglang.org/download/index.json | jq .master.src.tarball -r) | xz -d > src/zig.tar
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - run: npm ci
+      
+      - run: ./node_modules/.bin/parcel build index.html
+      
+      - uses: actions/upload-pages-artifact@v1.0.7
+        with:
+          path: "dist/"
+
+      - uses: actions/deploy-pages@v1.2.3
