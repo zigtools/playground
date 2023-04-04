@@ -19,7 +19,7 @@ jobs:
 
       - run: wget https://zig.pm/zls/downloads/wasm32-wasi/bin/zls.wasm -O src/zls.wasm
 
-      - run: curl $(curl https://ziglang.org/download/index.json | jq .master.src.tarball -r) | xz -d > src/zig.tar
+      - run: curl $(curl https://ziglang.org/download/index.json | jq .master.src.tarball -r) | xz -d | gzip > src/zig.tar.gz
 
       - uses: actions/setup-node@v3
         with:

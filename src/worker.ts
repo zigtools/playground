@@ -6,7 +6,8 @@ import { untar } from "@immutabl3/tar";
 // @ts-ignore
 import zlsWasm from "url:./zls.wasm";
 // @ts-ignore
-import zigTar from "url:./zig.tar";
+import zigTar from "url:./zig.tar.gz";
+import { ungzip } from "pako";
 
 let sharer: Sharer = new Sharer();
 
@@ -107,7 +108,7 @@ onmessage = (event) => {
 
 async function getLatestZigArchive() {
     const archive = await (await fetch(zigTar, {})).arrayBuffer();
-    const entries = await untar(archive);
+    const entries = await untar(ungzip(archive));
 
     const first = entries[0].path;
 
