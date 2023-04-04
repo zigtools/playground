@@ -1,6 +1,8 @@
 import { Sharer } from "./sharer";
-import { WASI, PreopenDirectory, Fd, File } from "@bjorn3/browser_wasi_shim/dist";
+import { WASI, Directory, PreopenDirectory, Fd, File } from "./wasi";
+// import { Directory, PreopenDirectory, Fd, File } from "wasi"
 import { Iovec } from "@bjorn3/browser_wasi_shim/typings/wasi_defs";
+import { untar } from "@immutabl3/tar";
 // @ts-ignore
 import zlsWasm from "url:./zls.wasm";
 
@@ -51,7 +53,10 @@ class Stdio extends Fd {
 
                 while (this.buffer.indexOf(10) !== -1) {
                     let data = new TextDecoder("utf-8").decode(Uint8Array.from(this.buffer.splice(0, this.buffer.indexOf(10) + 1)));
-                    console.debug(this.kind, data);
+                    console.log("stderr", data);
+                    postMessage({
+                        stderr: data,
+                    });
                 }
             }
 
@@ -71,13 +76,9 @@ class Stdio extends Fd {
 
         sharer.lock();
 
-        console.log(sharer.index);
-
         for (let iovec of iovs) {
             const read = Math.min(iovec.buf_len, sharer.index);
             const sl = new Uint8Array(sharer.dataBuffer).slice(0, read);
-
-            console.log("stdin", sharer.index, read, new TextDecoder("utf-8").decode(sl))
 
             view8.set(sl, iovec.buf);
             new Uint8Array(sharer.dataBuffer).set(new Uint8Array(sharer.dataBuffer, read), 0);
@@ -96,21 +97,45 @@ class Stdio extends Fd {
 const stdin = new Stdio(StdioKind.stdin);
 
 onmessage = (event) => {
-    console.log("SABs", event.data);
-
     sharer.indexBuffer = event.data.indexBuffer;
     sharer.lockBuffer = event.data.lockBuffer;
     sharer.stdinBlockBuffer = event.data.stdinBlockBuffer;
     sharer.dataBuffer = event.data.dataBuffer;
 };
 
+async function getLatestZigArchive() {
+    const archive = await (await fetch("zig.tar", {})).arrayBuffer();
+    const entries = await untar(archive);
+
+    const first = entries[0].path;
+
+    let dirs = new Directory({});
+
+    for (const e of entries) {
+        if (e.type === "file" && e.path.slice(first.length).startsWith("lib/std")) {
+            const path = e.path.slice(first.length + 8);
+            const splitPath = path.split("/");
+
+            let c = dirs;
+            for (const segment of splitPath.slice(0, -1)) {
+                c.contents[segment] = c.contents[segment] ?? new Directory({});
+                c = c.contents[segment];
+            }
+
+            c.contents[splitPath[splitPath.length - 1]] = new File(e.getBinary())
+        }
+    }
+
+    return dirs;
+}
+
 (async () => {
+    const libStd = await getLatestZigArchive();
+
     const wasmResp = await fetch(zlsWasm);
     const wasmData = await wasmResp.arrayBuffer();
 
-    console.log("wasm len", wasmData.byteLength);
-
-    let args = ["zls.wasm"];
+    let args = ["zls.wasm", "--enable-debug-log"];
     let env = [];
     let fds = [
         stdin, // stdin
@@ -118,6 +143,9 @@ onmessage = (event) => {
         new Stdio(StdioKind.stderr), // stderr
         new PreopenDirectory(".", {
             "zls.wasm": new File(wasmData),
+            "lib": new Directory({
+                "std": libStd,
+            }),
         }),
     ];
     let wasi = new WASI(args, env, fds);

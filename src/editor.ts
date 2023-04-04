@@ -1,5 +1,5 @@
 import { EditorState } from "@codemirror/state"
-import { gutter, keymap, lineNumbers } from "@codemirror/view"
+import { keymap } from "@codemirror/view"
 import { EditorView, basicSetup, minimalSetup } from "codemirror"
 import { JsonRpcMessage, LspClient } from "./lsp";
 import { Sharer } from "./sharer";
@@ -22,9 +22,23 @@ export default class ZlsClient extends LspClient {
             stdinBlockBuffer: this.sharer.stdinBlockBuffer,
             dataBuffer: this.sharer.dataBuffer,
         });
+
+        // Atomics mess up debug functionality, so this unfreezes
+        // the service worker when you want to inspect a logged object
+        window.unfreeze = () => {
+            Atomics.store(new Int32Array(this.sharer.stdinBlockBuffer), 0, 1);
+            Atomics.notify(new Int32Array(this.sharer.stdinBlockBuffer), 0);
+        }
     }
 
     private messageHandler = (ev: MessageEvent) => {
+        if (ev.data.stderr) {
+            const line = document.createElement("div");
+            line.innerText = ev.data.stderr;
+            document.getElementById("stderr")?.append(line);
+            return;
+        }
+
         console.log("LSP <<-", ev.data);
         this.handleMessage(ev.data);
     };
@@ -44,8 +58,6 @@ ${str}`
             const encoded = new TextEncoder().encode(final);
             new Uint8Array(this.sharer.dataBuffer).set(encoded, this.sharer.index);
             this.sharer.index += encoded.byteLength;
-
-            console.log(this.sharer.index);
 
             this.sharer.unlock();
 

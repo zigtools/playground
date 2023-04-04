@@ -210,6 +210,27 @@ export abstract class LspClient {
     }
 
     public handleMessage(message: JsonRpcMessage) {
+        if (message.method === "workspace/configuration") {
+            const configParams = message.params as LSP.ConfigurationParams;
+            let resp: (string | null)[] = [];
+
+            for (const item of configParams.items) {
+                if (item.section === "zls.zig_lib_path") {
+                    resp.push("/lib");
+                } else {
+                    resp.push(null);
+                }
+            }
+
+            this.sendMessage({
+                jsonrpc: "2.0",
+                id: message.id,
+                result: resp,
+            })
+
+            return;
+        }
+
         if (message.id !== undefined && message.method === undefined) {
             const req = this.outboundRequests.get(message.id);
             if (req) {

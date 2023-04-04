@@ -3,7 +3,6 @@
     "bundle": "node_modules\\.bin\\rollup editor.mjs -f iife -o editor.bundle.js -p @rollup\\plugin-node-resolve"
   },
   "dependencies": {
-    "@bjorn3/browser_wasi_shim": "^0.2.7",
     "@codemirror/autocomplete": "^6.4.2",
     "@codemirror/commands": "^6.2.2",
     "@codemirror/language": "^6.6.0",
@@ -11,6 +10,7 @@
     "@codemirror/state": "^6.2.0",
     "@codemirror/tooltip": "^0.19.16",
     "@codemirror/view": "^6.9.3",
+    "@immutabl3/tar": "^0.0.2",
     "@rollup/plugin-terser": "^0.4.0",
     "@wasmer/wasi": "^1.2.2",
     "codemirror": "^6.0.1",
@@ -18,6 +18,7 @@
     "vscode-languageserver-protocol": "^3.17.3"
   },
   "devDependencies": {
+    "@parcel/transformer-sass": "^2.8.3",
     "@types/diff-match-patch": "^1.0.32",
     "@types/node": "^18.15.11",
     "events": "^3.3.0",

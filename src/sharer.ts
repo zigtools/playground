@@ -1,3 +1,6 @@
+const locked = 1;
+const unlocked = 0;
+
 export class Sharer {
     public indexBuffer: SharedArrayBuffer;
     public lockBuffer: SharedArrayBuffer;
@@ -21,17 +24,25 @@ export class Sharer {
         Atomics.store(new Uint32Array(this.indexBuffer), 0, value);
     }
     
+    // https://blogtitle.github.io/using-javascript-sharedarraybuffers-and-atomics/
     lock() {
-        try {
-            // spin until open
-            Atomics.wait(new Int32Array(this.lockBuffer), 0, 1);
-        } catch {}
-        // lock it
-        Atomics.store(new Int32Array(this.lockBuffer), 0, 1);
+        while (true) {
+            if (Atomics.compareExchange(new Int32Array(this.lockBuffer), 0, unlocked, locked) == unlocked) {
+                return;
+            }
+
+            try {
+                // Main thread can't be blocked with wait...
+                // so we just block it with this while true :P
+                Atomics.wait(new Int32Array(this.lockBuffer), 0, locked);
+            } catch {}
+        }
     }
     
     unlock() {
-        Atomics.store(new Int32Array(this.lockBuffer), 0, 0);
-        Atomics.notify(new Int32Array(this.lockBuffer), 0);
+        if (Atomics.compareExchange(new Int32Array(this.lockBuffer), 0, locked, unlocked) != locked) {
+            throw new Error("Mutex is in inconsistent state: unlock on unlocked Mutex.");
+        }
+        Atomics.notify(new Int32Array(this.lockBuffer), 0, 1);      
     }
 }

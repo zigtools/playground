@@ -4,11 +4,20 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>zls in the browser</title>
+
+    <link rel="stylesheet" href="style/style.scss">
+
+    <script src="src/enable_coop_coep.js"></script>
 </head>
 <body>
-    <div id="editor">
+    <h1>zls in the browser</h1>
 
+    <p><strong>Note:</strong> opening devtools in Chrome causes a stack overflow that otherwise doesn't occur :/</p>
+
+    <div id="split-pane">
+        <div id="editor"></div>
+        <div id="stderr"></div>
     </div>
 
     <script src="/src/editor.ts" type="module"></script>
