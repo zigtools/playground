@@ -6,10 +6,7 @@ import {
     DiagnosticSeverity,
     CompletionItemKind,
     CompletionTriggerKind,
-} from 'vscode-languageserver-protocol';
-import {diff_match_patch} from "diff-match-patch";
-
-const dmp = new diff_match_patch();
+} from "vscode-languageserver-protocol";
 
 import type {
     Completion,
