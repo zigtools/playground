@@ -115,8 +115,8 @@ async function getLatestZigArchive() {
     let dirs = new Directory({});
 
     for (const e of entries) {
-        if (e.type === "file" && e.path.slice(first.length).startsWith("lib/std")) {
-            const path = e.path.slice(first.length + 8);
+        if (e.type === "file") {
+            const path = e.path.slice(first.length);
             const splitPath = path.split("/");
 
             let c = dirs;

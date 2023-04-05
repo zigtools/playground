@@ -5,6 +5,7 @@ import { JsonRpcMessage, LspClient } from "./lsp";
 import { Sharer } from "./sharer";
 import { indentWithTab } from "@codemirror/commands";
 import { indentUnit } from "@codemirror/language";
+import { oneDark } from "@codemirror/theme-one-dark";
 
 export default class ZlsClient extends LspClient {
     public worker: Worker;
@@ -81,11 +82,11 @@ let client = new ZlsClient(new Worker(
 (async () => {
     await client.initialize();
 
-    let editor = new EditorView({
+    new EditorView({
         extensions: [],
         parent: document.getElementById("editor")!,
         state: EditorState.create({
-            extensions: [basicSetup, indentUnit.of("    "), client.createPlugin("file:///main.zig", "zig", true), keymap.of([indentWithTab]),],
+            extensions: [basicSetup, oneDark, indentUnit.of("    "), client.createPlugin("file:///main.zig", "zig", true), keymap.of([indentWithTab]),],
         }),
     });
 })();

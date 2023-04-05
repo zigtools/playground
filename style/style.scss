@@ -5,12 +5,19 @@ html, body {
     padding: 1rem;
 
     font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    
+    color: hsl(0, 0%, 90%);
+    background-color: hsl(0, 0%, 10%);
 }
 
 h1 {
     margin-bottom: 2rem;
     font-size: 2em;
     font-weight: 600;
+}
+
+a {
+    color: hsl(200, 100%, 80%);
 }
 
 p {
@@ -36,12 +43,19 @@ i {
 }
 
 #editor, #stderr {
-    border: 1px solid black;
+    border: 1px solid white;
 }
 
 #stderr {
+    padding: 1rem;
     max-height: 12rem;
     overflow-y: auto;
     font-family: 'Courier New', Courier, monospace;
     line-height: 1.75;
+}
+
+ul {
+    list-style: circle;
+    margin-left: 2rem;
+    line-height: 1.5;
 }

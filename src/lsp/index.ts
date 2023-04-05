@@ -20,6 +20,7 @@ import type { PublishDiagnosticsParams } from 'vscode-languageserver-protocol';
 import type { ViewUpdate, PluginValue } from '@codemirror/view';
 import { Text } from '@codemirror/state';
 import type * as LSP from 'vscode-languageserver-protocol';
+import { foldService } from "@codemirror/language";
 
 const CompletionItemKindMap = Object.fromEntries(
     Object.entries(CompletionItemKind).map(([key, value]) => [value, key])
@@ -167,6 +168,10 @@ export abstract class LspClient {
         return this.request<LSP.CompletionParams, LSP.CompletionItem[] | LSP.CompletionList | null>("textDocument/completion", params);
     }
 
+    textDocumentFoldingRange(params: LSP.FoldingRangeParams) {
+        return this.request<LSP.FoldingRangeParams, LSP.FoldingRange[] | null>("textDocument/foldingRange", params);
+    }
+
     attachPlugin(plugin: LspPlugin) {
         this.plugins.push(plugin);
     }
@@ -259,6 +264,17 @@ export abstract class LspClient {
             //         offsetToPos(view.state.doc, pos)
             //     ) ?? null
             // ),
+            foldService.of((state, lineStart, lineEnd) => {
+                const startLine = state.doc.lineAt(lineStart);
+                const range = plugin?.foldingRangeMap.get(startLine.number - 1);
+                if (range) {
+                    if (range.endLine > state.doc.lines) return null;
+                    const endLine = state.doc.line(range.endLine + 1);
+                    return {from: range.startCharacter != undefined ? lineStart + range.startCharacter : startLine.to, to: range.endCharacter != undefined ? endLine.from + range.endCharacter : endLine.to};
+                }
+                
+                return null;
+            }),
             autocompletion({
                 override: [
                     async (context) => {
@@ -315,14 +331,14 @@ class LspPlugin implements PluginValue {
     private languageId: string;
     private documentVersion: number;
     
-    private changesTimeout: number;
+    public foldingRangeMap: Map<number, LSP.FoldingRange>;
 
     constructor(private view: EditorView, private allowHtmlContent: boolean) {
         this.client = this.view.state.facet(client);
         this.documentUri = this.view.state.facet(documentUri);
         this.languageId = this.view.state.facet(languageId);
         this.documentVersion = 0;
-        this.changesTimeout = 0;
+        this.foldingRangeMap = new Map();
 
         this.client.attachPlugin(this);
 
@@ -333,9 +349,11 @@ class LspPlugin implements PluginValue {
 
     async update({ docChanged }: ViewUpdate) {
         if (!docChanged) return;
-        this.sendChange({
+        this.foldingRangeMap.clear();
+        await this.sendChange({
             documentText: this.view.state.doc.toString(),
         });
+        await this.updateFoldingRanges();
     }
 
     destroy() {
@@ -371,6 +389,21 @@ class LspPlugin implements PluginValue {
         }
     }
 
+    async updateFoldingRanges(): Promise<void> {
+        const ranges = await this.client.textDocumentFoldingRange({
+            textDocument: {
+                uri: this.documentUri,
+            }
+        });
+
+        this.foldingRangeMap.clear();
+        if (ranges) {
+            for (const range of ranges) {
+                this.foldingRangeMap.set(range.startLine, range);
+            }
+        }
+    }
+
     async requestFormat(view: EditorView): Promise<void> {
         const formattingResult = await this.client.request<LSP.DocumentFormattingParams, LSP.TextEdit[]>("textDocument/formatting", {
             options: {
@@ -381,6 +414,8 @@ class LspPlugin implements PluginValue {
                 uri: this.documentUri,
             }
         });
+
+        this.foldingRangeMap.clear();
 
         if (formattingResult) {
             const text = this.view.state.doc;
@@ -395,6 +430,8 @@ class LspPlugin implements PluginValue {
                 });
             }
         }
+
+        await this.updateFoldingRanges();
     }
 
     async requestHoverTooltip(
