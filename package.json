@@ -12,6 +12,7 @@
     "@codemirror/tooltip": "^0.19.16",
     "@codemirror/view": "^6.9.3",
     "@immutabl3/tar": "^0.0.2",
+    "@lezer/highlight": "^1.1.4",
     "@rollup/plugin-terser": "^0.4.0",
     "@wasmer/wasi": "^1.2.2",
     "codemirror": "^6.0.1",

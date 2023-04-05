@@ -1,5 +1,9 @@
 @use "reset";
 
+:root {
+    color-scheme: dark;
+}
+
 html, body {
     margin: 0;
     padding: 1rem;
@@ -50,8 +54,11 @@ i {
     padding: 1rem;
     max-height: 12rem;
     overflow-y: auto;
-    font-family: 'Courier New', Courier, monospace;
     line-height: 1.75;
+}
+
+#stderr, code {
+    font-family: 'Courier New', Courier, monospace;
 }
 
 ul {

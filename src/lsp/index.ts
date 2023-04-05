@@ -1,7 +1,7 @@
 import { autocompletion } from "@codemirror/autocomplete";
 import { setDiagnostics } from "@codemirror/lint";
-import { ChangeSpec, Facet, Prec } from "@codemirror/state";
-import { EditorView, ViewPlugin, Tooltip, hoverTooltip, keymap } from '@codemirror/view';
+import { ChangeSpec, Facet, Prec, RangeSetBuilder } from "@codemirror/state";
+import { EditorView, ViewPlugin, Tooltip, hoverTooltip, keymap, DecorationSet, Decoration } from '@codemirror/view';
 import {
     DiagnosticSeverity,
     CompletionItemKind,
@@ -20,7 +20,10 @@ import type { PublishDiagnosticsParams } from 'vscode-languageserver-protocol';
 import type { ViewUpdate, PluginValue } from '@codemirror/view';
 import { Text } from '@codemirror/state';
 import type * as LSP from 'vscode-languageserver-protocol';
-import { foldService } from "@codemirror/language";
+import {SemanticTokenTypes} from 'vscode-languageserver-protocol';
+import { foldService, highlightingFor } from "@codemirror/language";
+import { tags } from "@lezer/highlight";
+import { Tag } from "@lezer/highlight";
 
 const CompletionItemKindMap = Object.fromEntries(
     Object.entries(CompletionItemKind).map(([key, value]) => [value, key])
@@ -88,6 +91,12 @@ export abstract class LspClient {
             capabilities: {
                 textDocument: {
                     publishDiagnostics: {},
+                    semanticTokens: {
+                        requests: {},
+                        tokenTypes: Object.values(SemanticTokenTypes),
+                        tokenModifiers: [],
+	                    formats: ["relative"],
+                    },
                     hover: {
                         dynamicRegistration: true,
                         contentFormat: ['plaintext', 'markdown'],
@@ -170,6 +179,10 @@ export abstract class LspClient {
 
     textDocumentFoldingRange(params: LSP.FoldingRangeParams) {
         return this.request<LSP.FoldingRangeParams, LSP.FoldingRange[] | null>("textDocument/foldingRange", params);
+    }
+
+    textDocumentSemanticTokensFull(params: LSP.SemanticTokensParams) {
+        return this.request<LSP.SemanticTokensParams, LSP.SemanticTokens | null>("textDocument/semanticTokens/full", params);
     }
 
     attachPlugin(plugin: LspPlugin) {
@@ -257,7 +270,9 @@ export abstract class LspClient {
             client.of(this),
             documentUri.of(docUri),
             languageId.of(langId),
-            ViewPlugin.define((view) => (plugin = new LspPlugin(view, allowHtmlContent))),
+            ViewPlugin.define((view) => (plugin = new LspPlugin(view, allowHtmlContent)), {
+                decorations: v => v.decorations,
+            }),
             // hoverTooltip(
             //     (view, pos) => plugin?.requestHoverTooltip(
             //         view,
@@ -275,6 +290,7 @@ export abstract class LspClient {
                 
                 return null;
             }),
+            
             autocompletion({
                 override: [
                     async (context) => {
@@ -331,6 +347,7 @@ class LspPlugin implements PluginValue {
     private languageId: string;
     private documentVersion: number;
     
+    public decorations: DecorationSet;
     public foldingRangeMap: Map<number, LSP.FoldingRange>;
 
     constructor(private view: EditorView, private allowHtmlContent: boolean) {
@@ -338,6 +355,8 @@ class LspPlugin implements PluginValue {
         this.documentUri = this.view.state.facet(documentUri);
         this.languageId = this.view.state.facet(languageId);
         this.documentVersion = 0;
+
+        this.decorations = Decoration.none;
         this.foldingRangeMap = new Map();
 
         this.client.attachPlugin(this);
@@ -353,6 +372,7 @@ class LspPlugin implements PluginValue {
         await this.sendChange({
             documentText: this.view.state.doc.toString(),
         });
+        await this.updateDecorations();
         await this.updateFoldingRanges();
     }
 
@@ -389,7 +409,127 @@ class LspPlugin implements PluginValue {
         }
     }
 
-    async updateFoldingRanges(): Promise<void> {
+    public async updateDecorations(): Promise<void> {
+        // TODO: Look into using incremental semantic
+        // tokens using view.visibleRanges
+
+        const semanticTokens = await this.client.textDocumentSemanticTokensFull({
+            textDocument: {
+                uri: this.documentUri,
+            }
+        });
+
+        if (!semanticTokens) return console.log("No semantic tokens!");
+
+        let builder = new RangeSetBuilder<Decoration>();
+
+        let line = 0;
+        let col = 0;
+
+        const data = semanticTokens.data;
+        for (let i = 0; i < data.length; i += 5) {
+            const deltaLine = data[i];
+            const deltaStartChar = data[i + 1];
+            const length = data[i + 2];
+            const tokenType = data[i + 3];
+            const tokenModifiers = data[i + 4];
+
+            line += deltaLine;
+            if (deltaLine == 0) { // same line
+                col += deltaStartChar;
+            } else {
+                col = deltaStartChar;
+            }
+            
+            const l = this.view.state.doc.line(line + 1).from;
+            const decodedTokenType = this.client.capabilities.semanticTokensProvider?.legend.tokenTypes[tokenType];
+            let codeMirrorTag: Tag | null = null;
+
+            // TODO: Improve these mappings
+            switch (decodedTokenType) {
+                case "namespace":
+                    codeMirrorTag = tags.namespace;
+                    break;
+                case "type":
+                    codeMirrorTag = tags.typeName;
+                    break;
+                case "class":
+                    codeMirrorTag = tags.className;
+                    break;
+                case "enum":
+                    codeMirrorTag = tags.className;
+                    break;
+                case "interface":
+                    codeMirrorTag = tags.className;
+                    break;
+                case "struct":
+                    codeMirrorTag = tags.className;
+                    break;
+                case "typeParameter":
+                    codeMirrorTag = tags.name;
+                    break;
+                case "parameter":
+                    codeMirrorTag = tags.name;
+                    break;
+                case "variable":
+                    codeMirrorTag = tags.variableName;
+                    break;
+                case "property":
+                    codeMirrorTag = tags.propertyName;
+                    break;
+                case "enumMember":
+                    codeMirrorTag = tags.propertyName;
+                    break;
+                case "event":
+                    codeMirrorTag = tags.emphasis;
+                    break;
+                case "function":
+                    codeMirrorTag = tags.function(tags.variableName);
+                    break;
+                case "method":
+                    codeMirrorTag = tags.function(tags.variableName);
+                    break;
+                case "macro":
+                    codeMirrorTag = tags.macroName;
+                    break;
+                case "keyword":
+                    codeMirrorTag = tags.keyword;
+                    break;
+                case "modifier":
+                    codeMirrorTag = tags.modifier;
+                    break;
+                case "comment":
+                    codeMirrorTag = tags.comment;
+                    break;
+                case "string":
+                    codeMirrorTag = tags.string;
+                    break;
+                case "number":
+                    codeMirrorTag = tags.number;
+                    break;
+                case "regexp":
+                    codeMirrorTag = tags.regexp;
+                    break;
+                case "operator":
+                    codeMirrorTag = tags.operator;
+                    break;
+                case "decorator":
+                    codeMirrorTag = tags.modifier;
+                    break;
+                default:
+                    break;
+            }
+
+            if (codeMirrorTag) {
+                builder.add(l + col, l + col + length, Decoration.mark({
+                    class: highlightingFor(this.view.state, [codeMirrorTag]) ?? undefined,
+                }));
+            }
+        }
+        this.decorations = builder.finish()
+    }
+
+    public async updateFoldingRanges(): Promise<void> {
         const ranges = await this.client.textDocumentFoldingRange({
             textDocument: {
                 uri: this.documentUri,

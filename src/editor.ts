@@ -82,11 +82,23 @@ let client = new ZlsClient(new Worker(
 (async () => {
     await client.initialize();
 
-    new EditorView({
+    let editor = new EditorView({
         extensions: [],
         parent: document.getElementById("editor")!,
         state: EditorState.create({
+            doc:
+`pub const std = @import("std");
+
+pub fn main() !void {
+    // Go ahead: type a \`.\` to complete me:
+    std
+}
+`,
             extensions: [basicSetup, oneDark, indentUnit.of("    "), client.createPlugin("file:///main.zig", "zig", true), keymap.of([indentWithTab]),],
         }),
     });
+
+    await client.plugins[0].updateDecorations();
+    await client.plugins[0].updateFoldingRanges();
+    editor.update([]);
 })();
