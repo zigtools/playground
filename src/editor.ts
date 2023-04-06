@@ -167,6 +167,9 @@ outputs_tab_selector.addEventListener("change", () => {
 const outputs_run = document.getElementById("outputs__run")! as HTMLButtonElement;
 
 outputs_run.addEventListener("click", async () => {
+    document.getElementById("zig-stderr")!.innerHTML = "";
+    document.getElementById("zig-output")!.innerHTML = "";
+
     zigWorker.postMessage({
         run: (await editor).state.doc.toString(),
     });
@@ -186,7 +189,11 @@ outputs_share.addEventListener("click", async () => {
         body: (await editor).state.doc.toString(),
     });
 
-    history.pushState(null, "", `/${(await response.text()).slice(0, 6)}`);
+    const hash = (await response.text()).slice(0, 6);
+    history.pushState(null, "", `/${hash}`);
+
+    (document.getElementById("popup__input")! as HTMLInputElement).value = `https://playground.zigtools.org/${hash}`;
+    document.getElementById("popup")?.classList.add("shown");
 });
 
 const endpoint = process.env.NODE_ENV === "development" ? "http://localhost:3000" : "https://pastes.zigtools.org";
@@ -204,3 +211,15 @@ function getPasteHash(): string | null {
     if (maybeHash.length === 6 || maybeHash.length === 64) return maybeHash;
     return null;
 }
+
+document.getElementById("popup__copy")?.addEventListener("click", () => {
+    var c = document.getElementById("popup__input") as HTMLInputElement;
+    c.select();
+    document.execCommand("copy");
+
+    document.getElementById("popup__copy")!.innerHTML = "Copied!"
+});
+
+document.getElementById("popup__close")?.addEventListener("click", () => {
+    document.getElementById("popup")?.classList.remove("shown");
+});

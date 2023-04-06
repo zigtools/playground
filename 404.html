@@ -11,41 +11,48 @@
     <script src="src/enable_coop_coep.js"></script>
 </head>
 <body>
-    <div id="banner">
-        <strong>Note:</strong> The self-hosted WebAssembly backend is still experimental: compiler bugs/crashes are not unexpected.
+    <nav>
+        <h1>Zig Playground</h1>
+        
+        <div>
+            <strong>Note:</strong> The self-hosted WebAssembly backend is still experimental: compiler bugs/crashes are not unexpected.
+        </div>
+    </nav>
+
+    <div id="popup">
+        <h2>Grab the share link below:</h2>
+        <input id="popup__input" type="text" readonly>
+        <div>
+            <button id="popup__copy" class="primary">Copy</button>
+            <button id="popup__close">Close</button>
+        </div>
     </div>
 
     <main>
-        <section>
-            <h1>Zig+ZLS Playground</h1>
-    
-            <p>This editor supports completions, formatting (<i>Ctrl+S</i>), and semantic token-based highlighting.</p>
-        </section>
-    
         <div id="split-pane">
             <div id="editor"></div>
             <div id="outputs">
                 <div id="outputs__toolbar">
                     <div>
-                        <button id="outputs__run">Run</button>
+                        <button id="outputs__run" class="primary">Run</button>
                         <button id="outputs__share">Share</button>
                     </div>
     
                     <div>
                         <select id="outputs__tab">
-                            <option value="zls-stderr" selected>ZLS Debug</option>
-                            <option value="zig-stderr">Zig Debug</option>
+                            <option value="zls-stderr">ZLS Debug</option>
+                            <option value="zig-stderr" selected>Zig Debug</option>
                             <option value="zig-output">Zig Output</option>
                         </select>
                     </div>
                 </div>
     
                 <div id="outputs__tabs">
-                    <div id="zls-stderr" class="shown">
+                    <div id="zls-stderr">
     
                     </div>
     
-                    <div id="zig-stderr">
+                    <div id="zig-stderr" class="shown">
     
                     </div>
     
