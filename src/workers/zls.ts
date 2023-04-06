@@ -1,13 +1,10 @@
-import { Sharer } from "./sharer";
-import { WASI, Directory, PreopenDirectory, Fd, File } from "./wasi";
-// import { Directory, PreopenDirectory, Fd, File } from "wasi"
-import { Iovec } from "@bjorn3/browser_wasi_shim/typings/wasi_defs";
-import { untar } from "@immutabl3/tar";
+import { Sharer } from "../sharer";
+import { WASI, Directory, PreopenDirectory, Fd, File } from "../wasi";
+import { Iovec } from "../wasi/wasi_defs";
 // @ts-ignore
-import zlsWasm from "url:./zls.wasm";
+import zlsWasm from "url:../zls.wasm";
 // @ts-ignore
-import zigTar from "url:./zig.tar.gz";
-import { ungzip } from "pako";
+import { getLatestZigArchive } from "../utils";
 
 let sharer: Sharer = new Sharer();
 
@@ -105,32 +102,6 @@ onmessage = (event) => {
     sharer.stdinBlockBuffer = event.data.stdinBlockBuffer;
     sharer.dataBuffer = event.data.dataBuffer;
 };
-
-async function getLatestZigArchive() {
-    const archive = await (await fetch(zigTar, {})).arrayBuffer();
-    const entries = await untar(ungzip(archive));
-
-    const first = entries[0].path;
-
-    let dirs = new Directory({});
-
-    for (const e of entries) {
-        if (e.type === "file") {
-            const path = e.path.slice(first.length);
-            const splitPath = path.split("/");
-
-            let c = dirs;
-            for (const segment of splitPath.slice(0, -1)) {
-                if (!c.contents.has(segment)) c.contents.set(segment, new Directory({}));
-                c = c.contents.get(segment) as Directory;
-            }
-
-            c.contents.set(splitPath[splitPath.length - 1], new File(e.getBinary()));
-        }
-    }
-
-    return dirs;
-}
 
 (async () => {
     let libStd = await getLatestZigArchive();

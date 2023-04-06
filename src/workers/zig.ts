@@ -1,15 +1,10 @@
-import { Sharer } from "./sharer";
-import { WASI, Directory, PreopenDirectory, Fd, File, OpenDirectory } from "./wasi";
-// import { Directory, PreopenDirectory, Fd, File } from "wasi"
-import { Iovec } from "@bjorn3/browser_wasi_shim/typings/wasi_defs";
-import { untar } from "@immutabl3/tar";
+import { Sharer } from "../sharer";
+import { WASI, Directory, PreopenDirectory, Fd, File, OpenDirectory } from "../wasi";
+import { Iovec } from "../wasi/wasi_defs";
 // @ts-ignore
-import zlsWasm from "url:./zig_release.wasm";
+import zlsWasm from "url:../zig_release.wasm";
 // @ts-ignore
-import zigTar from "url:./zig.tar.gz";
-import { ungzip } from "pako";
-
-let sharer: Sharer = new Sharer();
+import { getLatestZigArchive } from "../utils";
 
 enum StdioKind {
     stdin = "stdin",
@@ -49,39 +44,13 @@ class Stdio extends Fd {
     fd_read(view8: Uint8Array, iovs: Iovec[]): { ret: number; nread: number; } {
         console.error("Zig shoudln't be reading from stdin!");
 
-        return { ret: 0, nread };
+        return { ret: 0, nread: 0 };
     }
 }
 
 const stdin = new Stdio(StdioKind.stdin);
 
-async function getLatestZigArchive() {
-    const archive = await (await fetch(zigTar, {})).arrayBuffer();
-    const entries = await untar(ungzip(archive));
-
-    const first = entries[0].path;
-
-    let dirs = new Directory({});
-
-    for (const e of entries) {
-        if (e.type === "file") {
-            const path = e.path.slice(first.length);
-            const splitPath = path.split("/");
-
-            let c = dirs;
-            for (const segment of splitPath.slice(0, -1)) {
-                c.contents[segment] = c.contents[segment] ?? new Directory({});
-                c = c.contents[segment];
-            }
-
-            c.contents[splitPath[splitPath.length - 1]] = new File(e.getBinary())
-        }
-    }
-
-    return dirs;
-}
-
-(async () => {
+const wasmData = (async () => {
     let libStd = await getLatestZigArchive();
 
     const wasmResp = await fetch(zlsWasm);
@@ -113,18 +82,51 @@ pub fn main() void {
     let wasi = new WASI(args, env, fds);
 
     let wasm = await WebAssembly.compile(wasmData);
+    
+    return {
+        wasi,
+        wasm,
+    };
+})();
+
+let currentlyRunning = false;
+async function run(source: string) {
+    if (currentlyRunning) return;
+
+    currentlyRunning = true;
+    const {wasm, wasi} = await wasmData;
+    wasi.fds[3].dir.contents["main.zig"].data = new TextEncoder().encode(source);
+
+    postMessage({
+        stderr: "Creating WebAssembly instance...",
+    });
+
     let inst = await WebAssembly.instantiate(wasm, {
         "wasi_snapshot_preview1": wasi.wasiImport,
     });  
+    
+    postMessage({
+        stderr: "Compiling...",
+    });
+
     try {
         wasi.start(inst);
     } catch (err) {
-        console.error(err);
+        postMessage({
+            stderr: `${err}`,
+        });
     }
 
-    console.log(fds[3].dir.contents["main.wasm"]);
-    let blob = new Blob([fds[3].dir.contents["main.wasm"].data], {
-        type: "application/octet-stream"
-      });
-    console.log(URL.createObjectURL(blob));
-})();
+    console.log(wasi.fds[3].dir.contents["main.wasm"]);
+    // let blob = new Blob([wasi.fds[3].dir.contents["main.wasm"].data], {
+    //     type: "application/octet-stream"
+    //   });
+    // console.log(URL.createObjectURL(blob));
+    currentlyRunning = false;
+}
+
+onmessage = (event) => {
+    if (event.data.run) {
+        run(event.data.run);
+    }
+}

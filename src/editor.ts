@@ -36,8 +36,8 @@ export default class ZlsClient extends LspClient {
         if (ev.data.stderr) {
             const line = document.createElement("div");
             line.innerText = ev.data.stderr;
-            document.getElementById("stderr")?.append(line);
-            document.getElementById("stderr")?.scrollTo(0, document.getElementById("stderr")?.scrollHeight!);
+            document.getElementById("zls-stderr")?.append(line);
+            scrollOutputToEnd();
             return;
         }
 
@@ -74,12 +74,12 @@ ${str}`
     }
 }
 
-// let client = new ZlsClient(new Worker(
-//     new URL("worker.ts", import.meta.url),
-//     {type: "module"}
-// ));
+let client = new ZlsClient(new Worker(
+    new URL("workers/zls.ts", import.meta.url),
+    {type: "module"}
+));
 
-(async () => {
+let editor = (async () => {
     await client.initialize();
 
     let editor = new EditorView({
@@ -89,9 +89,14 @@ ${str}`
             doc:
 `const std = @import("std");
 
-pub fn main() !void {
-    // Go ahead: type a \`.\` to complete me:
-    std
+pub fn main() u8 {
+    std.debug.print("All your {s} are belong to us.\\n", .{"codebase"});
+
+    // WASI mains don't support errors (we can fix this with a horrible
+    // wrapper hack in the future :P)
+    std.io.getStdOut().writer().writeAll("bruh") catch return 1;
+
+    return 0;
 }
 `,
             extensions: [basicSetup, oneDark, indentUnit.of("    "), client.createPlugin("file:///main.zig", "zig", true), keymap.of([indentWithTab]),],
@@ -101,10 +106,17 @@ pub fn main() !void {
     await client.plugins[0].updateDecorations();
     await client.plugins[0].updateFoldingRanges();
     editor.update([]);
-});
+
+    return editor;
+})();
+
+function scrollOutputToEnd() {
+    const outputs = document.getElementById("outputs__tabs")!;
+    outputs.scrollTo(0, outputs.scrollHeight!);
+}
 
 let zigWorker = new Worker(
-    new URL("run_zig.ts", import.meta.url),
+    new URL("workers/zig.ts", import.meta.url),
     {type: "module"}
 );
 
@@ -112,9 +124,24 @@ zigWorker.onmessage = ev => {
     if (ev.data.stderr) {
         const line = document.createElement("div");
         line.innerText = ev.data.stderr;
-        document.getElementById("stderr")?.append(line);
-        document.getElementById("stderr")?.scrollTo(0, document.getElementById("stderr")?.scrollHeight!);
+        document.getElementById("zig-stderr")?.append(line);
+        scrollOutputToEnd();
         return;
     }
 }
 
+const outputs_tab_selector = document.getElementById("outputs__tab")! as HTMLSelectElement;
+
+outputs_tab_selector.addEventListener("change", () => {
+    for (const old of document.querySelectorAll("#outputs__tabs>*")) old.classList.remove("shown");
+    document.getElementById(outputs_tab_selector.value)?.classList.add("shown");
+    scrollOutputToEnd();
+});
+
+const outputs_run = document.getElementById("outputs__run")! as HTMLButtonElement;
+
+outputs_run.addEventListener("click", async () => {
+    zigWorker.postMessage({
+        run: (await editor).state.doc.toString(),
+    })
+});

@@ -4,29 +4,50 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>zls in the browser</title>
+    <title>Zig+ZLS Playground</title>
 
     <link rel="stylesheet" href="style/style.scss">
 
     <script src="src/enable_coop_coep.js"></script>
 </head>
 <body>
-    <h1>zls in the browser</h1>
-    
-    <p>
-        <strong>Some quick notes:</strong>
-        <ul>
-            <li>The editor might take a bit to load (1-3 seconds)</li>
-            <li>Opening devtools in Chrome causes a stack overflow that otherwise doesn't occur :/</li>
-            <li>See the source and learn more @ <a href="https://github.com/zigtools/zls-in-the-browser">https://github.com/zigtools/zls-in-the-browser</a></li>
-        </ul>
-    </p>
+    <section>
+        <h1>Zig+ZLS Playground</h1>
 
-    <p>This demo supports completions, formatting (<i>Ctrl+S</i>), and semantic token-based highlighting all thanks to a <code>wasm32-wasi</code> build of zls!</p>
+        <p>This editor supports completions, formatting (<i>Ctrl+S</i>), and semantic token-based highlighting.</p>
+    </section>
 
     <div id="split-pane">
         <div id="editor"></div>
-        <div id="stderr"></div>
+        <div id="outputs">
+            <div id="outputs__toolbar">
+                <div>
+                    <button id="outputs__run">Run</button>
+                </div>
+
+                <div>
+                    <select id="outputs__tab">
+                        <option value="zls-stderr" selected>ZLS Debug</option>
+                        <option value="zig-stderr">Zig Debug</option>
+                        <option value="zig-output">Zig Output</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="outputs__tabs">
+                <div id="zls-stderr" class="shown">
+
+                </div>
+
+                <div id="zig-stderr">
+
+                </div>
+
+                <div id="zig-output">
+
+                </div>
+            </div>
+        </div>
     </div>
 
     <script src="/src/editor.ts" type="module"></script>
