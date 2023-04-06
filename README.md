@@ -9,7 +9,7 @@ Works pretty well in a bunch of browsers, but note the required security headers
 
 ```bash
 npm i -g parcel
-parcel index.html
+parcel 404.html
 ```
 
 Enjoy!

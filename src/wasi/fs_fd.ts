@@ -167,7 +167,7 @@ export class OpenDirectory extends Fd {
     fs_rights_inheriting: BigInt,
     fd_flags: number
   ): { ret: number; fd_obj: Fd | null } {
-    // console.log("PATH IN", path)
+    console.log("PATH IN", path)
     let entry = this.dir.get_entry_for_path(path);
     // console.log("PATH ENTRY?", entry)
     if (entry == null) {

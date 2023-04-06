@@ -1,4 +1,5 @@
 @use "reset";
+@use "theme";
 
 :root {
     color-scheme: dark;
@@ -14,10 +15,20 @@ body, button, input, select {
 
 html, body {
     margin: 0;
-    padding: 1rem;
+    padding: 0;
     
-    color: hsl(0, 0%, 90%);
-    background-color: hsl(0, 0%, 10%);
+    color: theme.$foreground;
+    background-color: theme.$background;
+}
+
+#banner {
+    padding: 1rem 2rem;
+
+    background-color: hsl(0, 0%, 20%);
+}
+
+main {
+    padding: 2rem;
 }
 
 h1 {
@@ -58,7 +69,7 @@ i {
 }
 
 #editor {
-    border: 1px solid white;
+    border: 1px solid theme.$foreground;
     height: 70vh;
 }
 
@@ -77,23 +88,29 @@ ul {
 }
 
 button {
-    border: none;
-    border-radius: 2px;
+    border: 1px solid theme.$foreground;
+    border-radius: 0px;
 
     padding: 0.25rem 1.5rem;
 
     font-weight: 700;
 
     cursor: pointer;
-    background-color: hsl(0, 0%, 40%);
+    background-color: hsl(0, 0%, 17.5%);
 
     &:hover {
-        background-color: hsl(0, 0%, 50%);
+        background-color: hsl(0, 0%, 20%);
     }
 }
 
 select {
+    border: 1px solid theme.$foreground;
+    border-radius: 0;
 
+    padding: 0.25rem 1.5rem;
+
+    outline: none;
+    background-color: hsl(0, 0%, 17.5%);
 }
 
 #outputs {
@@ -110,7 +127,7 @@ select {
     }
 
     &__tabs {
-        border: 1px solid white;
+        border: 1px solid theme.$foreground;
         
         padding: 1rem;
 

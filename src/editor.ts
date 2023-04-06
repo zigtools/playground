@@ -82,12 +82,14 @@ let client = new ZlsClient(new Worker(
 let editor = (async () => {
     await client.initialize();
 
+    console.log(getPasteHash());
+
     let editor = new EditorView({
         extensions: [],
         parent: document.getElementById("editor")!,
         state: EditorState.create({
             doc:
-`const std = @import("std");
+    (await getPaste()) ?? `const std = @import("std");
 
 pub fn main() u8 {
     std.debug.print("All your {s} are belong to us.\\n", .{"codebase"});
@@ -172,3 +174,33 @@ outputs_run.addEventListener("click", async () => {
     outputs_tab_selector.value = "zig-stderr";
     changeTab("zig-stderr");
 });
+
+const outputs_share = document.getElementById("outputs__share")! as HTMLButtonElement;
+
+outputs_share.addEventListener("click", async () => {
+    const response = await fetch(`${endpoint}/put`, {
+        method: "put",
+        headers: {
+            "Content-Type": "application/octet-stream"
+        },
+        body: (await editor).state.doc.toString(),
+    });
+
+    history.pushState(null, "", `/${(await response.text()).slice(0, 6)}`);
+});
+
+const endpoint = process.env.NODE_ENV === "development" ? "http://localhost:3000" : "https://pastes.zigtools.org";
+
+async function getPaste(): Promise<string | null> {
+    const hash = getPasteHash();
+    if (!hash) return null;
+    const f = await fetch(`${endpoint}/get${hash.length === 64 ? "Exact" : ""}/${hash}`);
+    if (f.status !== 200) return null;
+    return await f.text();
+}
+
+function getPasteHash(): string | null {
+    const maybeHash = location.pathname.replace("/", "");
+    if (maybeHash.length === 6 || maybeHash.length === 64) return maybeHash;
+    return null;
+}
