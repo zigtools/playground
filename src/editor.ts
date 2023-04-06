@@ -115,6 +115,12 @@ function scrollOutputToEnd() {
     outputs.scrollTo(0, outputs.scrollHeight!);
 }
 
+function changeTab(newTab) {
+    for (const old of document.querySelectorAll("#outputs__tabs>*")) old.classList.remove("shown");
+    document.getElementById(newTab)?.classList.add("shown");
+    scrollOutputToEnd();
+}
+
 let zigWorker = new Worker(
     new URL("workers/zig.ts", import.meta.url),
     {type: "module"}
@@ -127,15 +133,33 @@ zigWorker.onmessage = ev => {
         document.getElementById("zig-stderr")?.append(line);
         scrollOutputToEnd();
         return;
+    } else if (ev.data.compiled) {
+        outputs_tab_selector.value = "zig-output";
+        changeTab("zig-output");
+
+        let runnerWorker = new Worker(
+            new URL("workers/runner.ts", import.meta.url),
+            {type: "module"}
+        );
+        
+        runnerWorker.postMessage({run: ev.data.compiled});
+
+        runnerWorker.onmessage = rev => {
+            if (rev.data.stderr) {
+                document.getElementById("zig-output")!.innerHTML += rev.data.stderr;
+                scrollOutputToEnd();
+                return;
+            } else if (rev.data.done) {
+                runnerWorker.terminate();
+            }
+        }
     }
 }
 
 const outputs_tab_selector = document.getElementById("outputs__tab")! as HTMLSelectElement;
 
 outputs_tab_selector.addEventListener("change", () => {
-    for (const old of document.querySelectorAll("#outputs__tabs>*")) old.classList.remove("shown");
-    document.getElementById(outputs_tab_selector.value)?.classList.add("shown");
-    scrollOutputToEnd();
+    changeTab(outputs_tab_selector.value);
 });
 
 const outputs_run = document.getElementById("outputs__run")! as HTMLButtonElement;
@@ -143,5 +167,8 @@ const outputs_run = document.getElementById("outputs__run")! as HTMLButtonElemen
 outputs_run.addEventListener("click", async () => {
     zigWorker.postMessage({
         run: (await editor).state.doc.toString(),
-    })
+    });
+
+    outputs_tab_selector.value = "zig-stderr";
+    changeTab("zig-stderr");
 });
