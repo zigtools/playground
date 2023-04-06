@@ -1,0 +1,15 @@
+[Unit]
+Description=Paste Server
+After=network.target
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=1
+User=root
+WorkingDirectory=/root/playground/pasteserver
+ExecStart=/usr/bin/env node /root/playground/pasteserver
+
+[Install]
+WantedBy=multi-user.target
