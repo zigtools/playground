@@ -103,6 +103,16 @@ export class OpenFile extends Fd {
   fd_filestat_get(): { ret: number; filestat: wasi.Filestat } {
     return { ret: 0, filestat: this.file.stat() };
   }
+
+  fd_filestat_set_size(size: number | BigInt): number {
+    if (Number(size) > this.file.data.byteLength) {
+      let old = this.file.data;
+      this.file.data = new Uint8Array(Number(size));
+      this.file.data.set(old);
+    } else {
+      this.file.data = this.file.data.slice(0, Number(size));
+    }
+  }
 }
 
 export class OpenDirectory extends Fd {
@@ -144,7 +154,7 @@ export class OpenDirectory extends Fd {
   ): { ret: number; filestat: wasi.Filestat | null } {
     let entry = this.dir.get_entry_for_path(path);
     if (entry == null) {
-      return { ret: -1, filestat: null };
+      return { ret: wasi.ERRNO_NOENT, filestat: null };
     }
     return { ret: 0, filestat: entry.stat() };
   }
@@ -157,10 +167,13 @@ export class OpenDirectory extends Fd {
     fs_rights_inheriting: BigInt,
     fd_flags: number
   ): { ret: number; fd_obj: Fd | null } {
+    // console.log("PATH IN", path)
     let entry = this.dir.get_entry_for_path(path);
+    // console.log("PATH ENTRY?", entry)
     if (entry == null) {
       if ((oflags & wasi.OFLAGS_CREAT) == wasi.OFLAGS_CREAT) {
-        entry = this.dir.create_entry_for_path(path);
+        // console.log("PATH CREATE", path)
+        entry = this.dir.create_entry_for_path(path, (oflags & wasi.OFLAGS_DIRECTORY) == wasi.OFLAGS_DIRECTORY ? "directory" : "file");
       } else {
         return { ret: wasi.ERRNO_NOENT, fd_obj: null };
       }
@@ -186,6 +199,11 @@ export class OpenDirectory extends Fd {
     } else {
       throw "dir entry neither file nor dir";
     }
+  }
+
+  path_create_directory(path: string): number {
+    this.dir.create_entry_for_path(path, "directory");
+    return 0;
   }
 }
 

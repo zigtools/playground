@@ -47,7 +47,7 @@ export class Directory {
     return entry;
   }
 
-  create_entry_for_path(path: string): File | Directory {
+  create_entry_for_path(path: string, kind: "file" | "directory"): File | Directory {
     // FIXME fix type errors
     let entry: File | Directory = this;
     let components: Array<string> = path
@@ -61,7 +61,7 @@ export class Directory {
         entry = entry.contents[component];
       } else {
         //console.log("create", component);
-        if (i == components.length - 1) {
+        if (kind == "file") {
           // @ts-ignore
           entry.contents[component] = new File(new ArrayBuffer(0));
         } else {

@@ -74,10 +74,10 @@ ${str}`
     }
 }
 
-let client = new ZlsClient(new Worker(
-    new URL("worker.ts", import.meta.url),
-    {type: "module"}
-));
+// let client = new ZlsClient(new Worker(
+//     new URL("worker.ts", import.meta.url),
+//     {type: "module"}
+// ));
 
 (async () => {
     await client.initialize();
@@ -87,7 +87,7 @@ let client = new ZlsClient(new Worker(
         parent: document.getElementById("editor")!,
         state: EditorState.create({
             doc:
-`pub const std = @import("std");
+`const std = @import("std");
 
 pub fn main() !void {
     // Go ahead: type a \`.\` to complete me:
@@ -101,4 +101,20 @@ pub fn main() !void {
     await client.plugins[0].updateDecorations();
     await client.plugins[0].updateFoldingRanges();
     editor.update([]);
-})();
+});
+
+let zigWorker = new Worker(
+    new URL("run_zig.ts", import.meta.url),
+    {type: "module"}
+);
+
+zigWorker.onmessage = ev => {
+    if (ev.data.stderr) {
+        const line = document.createElement("div");
+        line.innerText = ev.data.stderr;
+        document.getElementById("stderr")?.append(line);
+        document.getElementById("stderr")?.scrollTo(0, document.getElementById("stderr")?.scrollHeight!);
+        return;
+    }
+}
+

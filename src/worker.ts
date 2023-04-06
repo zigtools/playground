@@ -121,11 +121,11 @@ async function getLatestZigArchive() {
 
             let c = dirs;
             for (const segment of splitPath.slice(0, -1)) {
-                c.contents[segment] = c.contents[segment] ?? new Directory({});
-                c = c.contents[segment];
+                if (!c.contents.has(segment)) c.contents.set(segment, new Directory({}));
+                c = c.contents.get(segment) as Directory;
             }
 
-            c.contents[splitPath[splitPath.length - 1]] = new File(e.getBinary())
+            c.contents.set(splitPath[splitPath.length - 1], new File(e.getBinary()));
         }
     }
 
@@ -133,7 +133,7 @@ async function getLatestZigArchive() {
 }
 
 (async () => {
-    const libStd = await getLatestZigArchive();
+    let libStd = await getLatestZigArchive();
 
     const wasmResp = await fetch(zlsWasm);
     const wasmData = await wasmResp.arrayBuffer();
