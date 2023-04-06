@@ -32,7 +32,7 @@ jobs:
 
       - run: npm ci
       
-      - run: ./node_modules/.bin/parcel build index.html
+      - run: ./node_modules/.bin/parcel build 404.html
       
       - uses: actions/upload-pages-artifact@v1.0.7
         with:
