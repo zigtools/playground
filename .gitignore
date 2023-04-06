@@ -3,4 +3,4 @@
 /.parcel-cache
 zig.tar.gz
 zls.wasm
-zig*.wasm
+zig_debug.wasm
