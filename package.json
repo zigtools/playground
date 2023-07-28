@@ -1,6 +1,8 @@
 {
+  "name": "playground",
   "scripts": {
-    "bundle": "node_modules\\.bin\\rollup editor.mjs -f iife -o editor.bundle.js -p @rollup\\plugin-node-resolve"
+    "bundle": "node_modules\\.bin\\rollup editor.mjs -f iife -o editor.bundle.js -p @rollup\\plugin-node-resolve",
+    "serve": "parcel 404.html"
   },
   "dependencies": {
     "@codemirror/autocomplete": "^6.4.2",

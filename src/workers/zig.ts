@@ -71,7 +71,10 @@ async function run(source: string) {
 
     const {libStd, wasm} = await wasmData;
 
-    let args = ["zig.wasm", "build-exe", "main.zig", "-Dtarget=wasm32-wasi"];
+    // -fno-llvm -fno-lld is set explicitly to ensure the native WASM backend is
+    // used in preference to LLVM. This may be removable once the non-LLVM
+    // backends become more mature.
+    let args = ["zig.wasm", "build-exe", "main.zig", "-Dtarget=wasm32-wasi", "-fno-llvm", "-fno-lld"];
     let env = [];
     let fds = [
         stdin, // stdin

@@ -91,14 +91,10 @@ let editor = (async () => {
             doc:
     (await getPaste()) ?? `const std = @import("std");
 
-pub fn main() u8 {
+pub fn main() !void {
     std.debug.print("All your {s} are belong to us.\\n", .{"codebase"});
 
-    // WASI mains don't support errors (we can fix this with a horrible
-    // wrapper hack in the future :P)
-    std.io.getStdOut().writer().writeAll("bruh") catch return 1;
-
-    return 0;
+    try std.io.getStdOut().writer().writeAll("bruh");
 }
 `,
             extensions: [basicSetup, oneDark, indentUnit.of("    "), client.createPlugin("file:///main.zig", "zig", true), keymap.of([indentWithTab]),],
