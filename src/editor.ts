@@ -33,20 +33,58 @@ export default class ZlsClient extends LspClient {
     }
 
     private messageHandler = (ev: MessageEvent) => {
-        if (ev.data.stderr) {
-            const line = document.createElement("div");
-            line.innerText = ev.data.stderr;
+        if (ev.data?.method == "window/logMessage" || ev.data.stderr) {
+            let logLevel = "[?????] ";
+            let color = "white";
+            if (!ev.data.stderr) {
+                switch (ev.data.params.type) {
+                    case 5:
+                        logLevel = "[DEBUG] ";
+                        color = "white";
+                        break;
+                    case 4:
+                        logLevel = "[LOG  ] ";
+                        color = "paleturquoise";
+                        break;
+                    case 3:
+                        logLevel = "[INFO ] ";
+                        color = "lightblue";
+                        break;
+                    case 2:
+                        logLevel = "[WARN ] ";
+                        color = "darkorange";
+                        break;
+                    case 1:
+                        logLevel = "[ERROR] ";
+                        color = "crimson";
+                        break;
+                    default:
+                        break;
+                }
+            }
+
+            const line = document.createElement('div');
+            line.style.color = color;
+
+            const logLevelSpan = document.createElement('span');
+            logLevelSpan.textContent = logLevel;
+
+            const logTextSpan = document.createElement('span');
+            logTextSpan.textContent = ev.data.stderr ? ev.data.stderr : ev.data.params.message;
+
+            line.appendChild(logLevelSpan);
+            line.appendChild(logTextSpan);
+
             document.getElementById("zls-stderr")?.append(line);
             scrollOutputToEnd();
-            return;
+        } else {
+            console.debug("LSP <<-", ev.data);
         }
-
-        console.log("LSP <<-", ev.data);
         this.handleMessage(ev.data);
     };
 
     public async sendMessage(message: JsonRpcMessage): Promise<void> {
-        console.log("LSP ->>", message);
+        console.debug("LSP ->>", message);
         if (this.worker) {
             const str = JSON.stringify(message);
 
