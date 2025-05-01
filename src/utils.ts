@@ -1,18 +1,18 @@
-import zigTar from "url:./zig.tar.gz";
-import { ungzip } from "pako";
-import { untar } from "@immutabl3/tar";
+// @ts-ignore
+import zigTarGz from "url:./zig.tar.gz";
+import { untar } from "@andrewbranch/untar.js";
 import { Directory, File } from "@bjorn3/browser_wasi_shim";
 
 export async function getLatestZigArchive() {
-    const archive = await (await fetch(zigTar, {})).arrayBuffer();
-    const entries = await untar(ungzip(archive));
+    const ds = new DecompressionStream("gzip");
+    const zigTarResponse = new Response((await fetch(zigTarGz, {})).body?.pipeThrough(ds));
+    const entries = await untar(await zigTarResponse.arrayBuffer());
 
     let root: TreeNode = new Map();
 
     for (const e of entries) {
-        if (e.type !== "file") continue;
-        if (!e.path.startsWith("lib/")) continue;
-        const path = e.path.slice("lib/".length);
+        if (!e.filename.startsWith("lib/")) continue;
+        const path = e.filename.slice("lib/".length);
         const splitPath = path.split("/");
 
         let c = root;
@@ -24,7 +24,7 @@ export async function getLatestZigArchive() {
         }
 
 
-        c.set(splitPath[splitPath.length - 1], e.getBinary());
+        c.set(splitPath[splitPath.length - 1], e.fileData);
     }
 
     return convert(root);

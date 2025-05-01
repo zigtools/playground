@@ -5,6 +5,7 @@
     "serve": "parcel 404.html"
   },
   "dependencies": {
+    "@andrewbranch/untar.js": "^1.0.3",
     "@bjorn3/browser_wasi_shim": "^0.4.1",
     "@codemirror/autocomplete": "^6.4.2",
     "@codemirror/commands": "^6.2.2",
@@ -14,16 +15,13 @@
     "@codemirror/theme-one-dark": "^6.1.1",
     "@codemirror/tooltip": "^0.19.16",
     "@codemirror/view": "^6.9.3",
-    "@immutabl3/tar": "^0.0.2",
     "@lezer/highlight": "^1.1.4",
     "codemirror": "^6.0.1",
-    "pako": "^2.1.0",
     "vscode-languageserver-protocol": "^3.17.3"
   },
   "devDependencies": {
     "@parcel/transformer-sass": "^2.8.3",
     "@types/node": "^18.15.11",
-    "@types/pako": "^2.0.0",
     "parcel": "^2.8.3"
   },
   "browserslist": [
