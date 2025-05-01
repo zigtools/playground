@@ -1,67 +1,7 @@
-import { WASI, Directory, PreopenDirectory, Fd, File, OpenDirectory } from "../wasi";
-import { Iovec } from "../wasi/wasi_defs";
+import { WASI, PreopenDirectory, Fd, File, ConsoleStdout, OpenFile, Inode } from "@bjorn3/browser_wasi_shim";
+import { getLatestZigArchive } from "../utils";
 // @ts-ignore
 import zlsWasm from "url:../zig_release.wasm";
-// @ts-ignore
-import { getLatestZigArchive } from "../utils";
-
-enum StdioKind {
-    stdin = "stdin",
-    stdout = "stdout",
-    stderr = "stderr",
-}
-
-class Stdio extends Fd {
-    kind: StdioKind;
-    buffer: number[];
-
-    constructor(kind: StdioKind) {
-        super();
-        this.kind = kind;
-        this.buffer = [];
-    }
-
-    fd_write(view8: Uint8Array, iovs: Iovec[]): { ret: number; nwritten: number; } {
-        let nwritten = 0;
-        for (let iovec of iovs) {
-            const slice = view8.slice(iovec.buf, iovec.buf + iovec.buf_len);
-
-            this.buffer.push(...slice);
-
-            while (this.buffer.indexOf(10) !== -1) {
-                let data = new TextDecoder("utf-8").decode(Uint8Array.from(this.buffer.splice(0, this.buffer.indexOf(10) + 1)));
-                postMessage({
-                    stderr: data,
-                });
-            }
-
-            nwritten += iovec.buf_len;
-        }
-        return { ret: 0, nwritten };
-    }
-
-    fd_read(view8: Uint8Array, iovs: Iovec[]): { ret: number; nread: number; } {
-        console.error("Zig shoudln't be reading from stdin!");
-
-        return { ret: 0, nread: 0 };
-    }
-}
-
-const stdin = new Stdio(StdioKind.stdin);
-
-const wasmData = (async () => {
-    let libStd = await getLatestZigArchive();
-
-    const wasmResp = await fetch(zlsWasm);
-    const wasmData = await wasmResp.arrayBuffer();
-
-    let wasm = await WebAssembly.compile(wasmData);
-    
-    return {
-        libStd,
-        wasm,
-    };
-})();
 
 let currentlyRunning = false;
 async function run(source: string) {
@@ -69,7 +9,7 @@ async function run(source: string) {
 
     currentlyRunning = true;
 
-    const {libStd, wasm} = await wasmData;
+    const libDirectory = await getLatestZigArchive();
 
     // -fno-llvm -fno-lld is set explicitly to ensure the native WASM backend is
     // used in preference to LLVM. This may be removable once the non-LLVM
@@ -77,44 +17,41 @@ async function run(source: string) {
     let args = ["zig.wasm", "build-exe", "main.zig", "-Dtarget=wasm32-wasi", "-fno-llvm", "-fno-lld"];
     let env = [];
     let fds = [
-        stdin, // stdin
-        new Stdio(StdioKind.stdout), // stdout
-        new Stdio(StdioKind.stderr), // stderr
-        new PreopenDirectory(".", {
-            "zig.wasm": new File(wasmData),
-            "main.zig": new File([]),
-        }),
-        new PreopenDirectory("/lib", {
-            "std": libStd,
-        }),
-        new PreopenDirectory("/cache", {
-            
-        }),
-    ];
-    let wasi = new WASI(args, env, fds);
-
-    wasi.fds[3].dir.contents["main.zig"].data = new TextEncoder().encode(source);
+        new OpenFile(new File([])), // stdin
+        ConsoleStdout.lineBuffered((line) => postMessage({ stderr: line })), // stdout
+        ConsoleStdout.lineBuffered((line) => postMessage({ stderr: line })), // stderr
+        new PreopenDirectory(".", new Map<string, Inode>([
+            ["main.zig", new File(new TextEncoder().encode(source))],
+        ])),
+        new PreopenDirectory("/lib", libDirectory.contents),
+        new PreopenDirectory("/cache", new Map()),
+    ] satisfies Fd[];
+    let wasi = new WASI(args, env, fds, { debug: false });
 
     postMessage({
         stderr: "Creating WebAssembly instance...",
     });
 
-    let inst = await WebAssembly.instantiate(wasm, {
+    const { instance } = await WebAssembly.instantiateStreaming(fetch(zlsWasm), {
         "wasi_snapshot_preview1": wasi.wasiImport,
-    });  
-    
+    });
+
     postMessage({
         stderr: "Compiling...",
     });
 
     try {
-        wasi.start(inst);
-    } catch (err) {
-        if (`${err}`.trim() === "exit with exit code 0") {
-            postMessage({
-                compiled: wasi.fds[3].dir.contents["main.wasm"].data
-            });
+        // @ts-ignore
+        const exitCode = wasi.start(instance);
+
+        if (exitCode == 0) {
+            const cwd = wasi.fds[3] as PreopenDirectory;
+            const mainWasm = cwd.dir.contents.get("main.wasm") as File | undefined;
+            if (mainWasm) {
+                postMessage({ compiled: mainWasm.data });
+            }
         }
+    } catch (err) {
         postMessage({
             stderr: `${err}`,
         });

@@ -50,10 +50,7 @@ export default class ZlsClient extends LspClient {
         if (this.worker) {
             const str = JSON.stringify(message);
 
-    const final =
-`Content-Length: ${str.length}\r
-\r
-${str}`
+            const final = `Content-Length: ${str.length}\r\n\r\n${str}`;
 
             this.sharer.lock();
 

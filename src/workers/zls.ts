@@ -1,17 +1,14 @@
+import { WASI, PreopenDirectory, Fd, ConsoleStdout, Directory } from "@bjorn3/browser_wasi_shim";
+import { getLatestZigArchive } from "../utils";
 import { Sharer } from "../sharer";
-import { WASI, Directory, PreopenDirectory, Fd, File } from "../wasi";
-import { Iovec } from "../wasi/wasi_defs";
 // @ts-ignore
 import zlsWasm from "url:../zls.wasm";
-// @ts-ignore
-import { getLatestZigArchive } from "../utils";
 
 let sharer: Sharer = new Sharer();
 
 enum StdioKind {
     stdin = "stdin",
     stdout = "stdout",
-    stderr = "stderr",
 }
 
 class Stdio extends Fd {
@@ -24,51 +21,30 @@ class Stdio extends Fd {
         this.buffer = [];
     }
 
-    fd_write(view8: Uint8Array, iovs: Iovec[]): { ret: number; nwritten: number; } {
-        let nwritten = 0;
-        for (let iovec of iovs) {
-            const slice = view8.slice(iovec.buf, iovec.buf + iovec.buf_len);
+    fd_write(slice: Uint8Array): { ret: number; nwritten: number } {
+        if (this.kind != StdioKind.stdout) throw new Error("Cannot write to stdin");
 
-            if (this.kind == StdioKind.stdin) {
-                throw new Error("Cannot write to stdin");
-            } else if (this.kind == StdioKind.stdout) {
-                this.buffer = this.buffer.concat(Array.from(slice));
-                
-                while (true) {
-                    const data = new TextDecoder("utf-8").decode(Uint8Array.from(this.buffer));
+        this.buffer = this.buffer.concat(Array.from(slice));
+        while (true) {
+            const data = new TextDecoder("utf-8").decode(Uint8Array.from(this.buffer));
 
-                    if (!data.startsWith("Content-Length: ")) break;
-                    
-                    const len = parseInt(data.slice("Content-Length: ".length));
-                    const bodyStart = data.indexOf("\r\n\r\n") + 4;
+            if (!data.startsWith("Content-Length: ")) break;
 
-                    if (bodyStart === -1) break;
-                    if (this.buffer.length < bodyStart + len) break;
-                    
-                    this.buffer.splice(0, bodyStart + len);
-                    postMessage(JSON.parse(data.slice(bodyStart, bodyStart + len)));
-                }
-            } else {
-                this.buffer.push(...slice);
+            const len = parseInt(data.slice("Content-Length: ".length));
+            const bodyStart = data.indexOf("\r\n\r\n") + 4;
 
-                while (this.buffer.indexOf(10) !== -1) {
-                    let data = new TextDecoder("utf-8").decode(Uint8Array.from(this.buffer.splice(0, this.buffer.indexOf(10) + 1)));
-                    console.log("stderr", data);
-                    postMessage({
-                        stderr: data,
-                    });
-                }
-            }
+            if (bodyStart === -1) break;
+            if (this.buffer.length < bodyStart + len) break;
 
-            nwritten += iovec.buf_len;
+            this.buffer.splice(0, bodyStart + len);
+            postMessage(JSON.parse(data.slice(bodyStart, bodyStart + len)));
         }
-        return { ret: 0, nwritten };
+        return { ret: 0, nwritten: slice.length };
     }
 
-    fd_read(view8: Uint8Array, iovs: Iovec[]): { ret: number; nread: number; } {
+    fd_read(size: number): { ret: number; data: Uint8Array; } {
         if (this.kind != StdioKind.stdin) throw new Error("Cannot read from non-stdin");
 
-        let nread = 0;
         if (sharer.index === 0) {
             Atomics.store(new Int32Array(sharer.stdinBlockBuffer), 0, 0);
             Atomics.wait(new Int32Array(sharer.stdinBlockBuffer), 0, 0);
@@ -76,25 +52,17 @@ class Stdio extends Fd {
 
         sharer.lock();
 
-        for (let iovec of iovs) {
-            const read = Math.min(iovec.buf_len, sharer.index);
-            const sl = new Uint8Array(sharer.dataBuffer).slice(0, read);
+        const read = Math.min(size, sharer.index);
+        const data = new Uint8Array(sharer.dataBuffer).slice(0, read);
 
-            view8.set(sl, iovec.buf);
-            new Uint8Array(sharer.dataBuffer).set(new Uint8Array(sharer.dataBuffer, read), 0);
-
-            sharer.index -= read;
-            
-            nread += read;
-        }
+        new Uint8Array(sharer.dataBuffer).set(new Uint8Array(sharer.dataBuffer, read), 0);
+        sharer.index -= read;
 
         sharer.unlock();
 
-        return { ret: 0, nread };
+        return { ret: 0, data };
     }
 }
-
-const stdin = new Stdio(StdioKind.stdin);
 
 onmessage = (event) => {
     sharer.indexBuffer = event.data.indexBuffer;
@@ -104,29 +72,24 @@ onmessage = (event) => {
 };
 
 (async () => {
-    let libStd = await getLatestZigArchive();
-
-    const wasmResp = await fetch(zlsWasm);
-    const wasmData = await wasmResp.arrayBuffer();
+    let libDirectory = await getLatestZigArchive();
 
     let args = ["zls.wasm", "--enable-debug-log"];
     let env = [];
     let fds = [
-        stdin, // stdin
+        new Stdio(StdioKind.stdin), // stdin
         new Stdio(StdioKind.stdout), // stdout
-        new Stdio(StdioKind.stderr), // stderr
-        new PreopenDirectory(".", {
-            "zls.wasm": new File(wasmData),
-            "lib": new Directory({
-                "std": libStd,
-            }),
-        }),
+        ConsoleStdout.lineBuffered((line) => postMessage({ stderr: line })), // stderr
+        new PreopenDirectory(".", new Map([
+            ["lib", new Directory(libDirectory.contents)]
+        ])),
     ];
-    let wasi = new WASI(args, env, fds);
+    let wasi = new WASI(args, env, fds, { debug: false });
 
-    let wasm = await WebAssembly.compile(wasmData);
-    let inst = await WebAssembly.instantiate(wasm, {
+    const { instance } = await WebAssembly.instantiateStreaming(fetch(zlsWasm), {
         "wasi_snapshot_preview1": wasi.wasiImport,
-    });  
-    wasi.start(inst);
+    });
+
+    // @ts-ignore
+    wasi.start(instance);
 })();

@@ -5,6 +5,7 @@
     "serve": "parcel 404.html"
   },
   "dependencies": {
+    "@bjorn3/browser_wasi_shim": "^0.4.1",
     "@codemirror/autocomplete": "^6.4.2",
     "@codemirror/commands": "^6.2.2",
     "@codemirror/language": "^6.6.0",
