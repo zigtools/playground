@@ -2,7 +2,7 @@ name: Deploy
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   workflow_dispatch:
 
 permissions:
@@ -15,27 +15,18 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      - run: wget https://zig.pm/zls/downloads/wasm32-wasi/bin/zls.wasm -O src/zls.wasm
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
 
       - run: |
-          mkdir zigarchive
-          cd zigarchive
-          curl $(curl https://ziglang.org/download/index.json | jq .master.src.tarball -r) | xz -d | tar -xvf - --strip-components=1
-          cd ..
-          tar -cz zigarchive/lib/std > src/zig.tar.gz
+          npm ci
+          npx parcel build 404.html
 
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 18
-
-      - run: npm ci
-      
-      - run: ./node_modules/.bin/parcel build 404.html
-      
-      - uses: actions/upload-pages-artifact@v1.0.7
+      - uses: actions/upload-pages-artifact@v3
         with:
           path: "dist/"
 
-      - uses: actions/deploy-pages@v1.2.3
+      - uses: actions/deploy-pages@v4

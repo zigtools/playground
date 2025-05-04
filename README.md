@@ -1,15 +1,13 @@
-# zls in the browser
+# Zig and ZLS in the browser
 
 Works pretty well in a bunch of browsers, but note the required security headers.
 
 ## Installing
 
-* Compile zls for `wasm32-wasi` and place `zls.wasm` in `src`
-* Additionally, place `zig.tar.gz` (make sure that the name matches) from the website in `src`
-  * If you've downloaded Zig and built from source following `ZIG_WASM.md`, you can also use this command:
-    ```bash
-    tar -C /path/to/zig -cz lib/std >src/zig.tar.gz
-    ```
+You can either:
+
+- Use it online: https://playground.zigtools.org/
+- Run it locally:
 
 ```bash
 npm install
@@ -17,6 +15,24 @@ npm run serve
 ```
 
 Enjoy!
+
+### Update artifacts
+
+For the time being, the following artifacts have been commited to source control:
+
+- `src/zls.wasm` - A build of [ZLS](https://github.com/zigtools/zls) (ReleaseSmall, wasm32-wasi, VERSION_TBA)
+- `src/zig.wasm` - A build of [Zig](https://github.com/ziglang/zig) (ReleaseSmall, wasm32-wasi, 0.14.0 with `./zig.patch` applied)
+- `src/zig.tar.gz` - The source code of [Zig](https://github.com/ziglang/zig). Only the `lib/std` subdirectory is needed.
+
+The `./compile.sh` script can be used to create these artifacts:
+
+```bash
+./compile zls
+./compile zig
+./compile zig_tarball
+```
+
+Compiling Zig and ZLS may require different Zig compiler versions.
 
 ## TODOs
 
