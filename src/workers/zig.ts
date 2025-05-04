@@ -1,7 +1,7 @@
 import { WASI, PreopenDirectory, Fd, File, ConsoleStdout, OpenFile, Inode } from "@bjorn3/browser_wasi_shim";
 import { getLatestZigArchive } from "../utils";
 // @ts-ignore
-import zlsWasm from "url:../zig_release.wasm";
+import zlsWasm from "url:../zig.wasm";
 
 let currentlyRunning = false;
 async function run(source: string) {
@@ -14,7 +14,15 @@ async function run(source: string) {
     // -fno-llvm -fno-lld is set explicitly to ensure the native WASM backend is
     // used in preference to LLVM. This may be removable once the non-LLVM
     // backends become more mature.
-    let args = ["zig.wasm", "build-exe", "main.zig", "-Dtarget=wasm32-wasi", "-fno-llvm", "-fno-lld"];
+    let args = [
+        "zig.wasm",
+        "build-exe",
+        "main.zig",
+        "-fno-llvm",
+        "-fno-lld",
+        "-fno-ubsan-rt",
+        "-fno-entry", // prevent the native webassembly backend from adding a start function to the module 
+    ];
     let env = [];
     let fds = [
         new OpenFile(new File([])), // stdin

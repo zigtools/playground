@@ -74,15 +74,15 @@ onmessage = (event) => {
 (async () => {
     let libDirectory = await getLatestZigArchive();
 
-    let args = ["zls.wasm", "--enable-debug-log"];
+    let args = ["zls.wasm"];
     let env = [];
     let fds = [
         new Stdio(StdioKind.stdin), // stdin
         new Stdio(StdioKind.stdout), // stdout
         ConsoleStdout.lineBuffered((line) => postMessage({ stderr: line })), // stderr
-        new PreopenDirectory(".", new Map([
-            ["lib", new Directory(libDirectory.contents)]
-        ])),
+        new PreopenDirectory(".", new Map([])),
+        new PreopenDirectory("/lib", libDirectory.contents),
+        new PreopenDirectory("/cache", new Map()),
     ];
     let wasi = new WASI(args, env, fds, { debug: false });
 

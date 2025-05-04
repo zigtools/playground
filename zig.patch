@@ -1,0 +1,21 @@
+diff --git a/src/dev.zig b/src/dev.zig
+index f4be5a36..ae4e914b 100644
+--- a/src/dev.zig
++++ b/src/dev.zig
+@@ -150,12 +150,13 @@ pub const Env = enum {
+                 else => Env.sema.supports(feature),
+             },
+             .wasm => switch (feature) {
+-                .stdio_listen,
+-                .incremental,
+                 .wasm_backend,
+                 .wasm_linker,
++                .build_exe_command,
++                .sema,
++                .ast_gen,
+                 => true,
+-                else => Env.sema.supports(feature),
++                else => false,
+             },
+         };
+     }

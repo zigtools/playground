@@ -227,11 +227,11 @@ export abstract class LspClient {
     public handleMessage(message: JsonRpcMessage) {
         if (message.method === "workspace/configuration") {
             const configParams = message.params as LSP.ConfigurationParams;
-            let resp: (string | null)[] = [];
+            let resp: unknown[] = [];
 
             for (const item of configParams.items) {
-                if (item.section === "zls.zig_lib_path") {
-                    resp.push("/lib");
+                if (item.section === "zls.prefer_ast_check_as_child_process") {
+                    resp.push(false);
                 } else {
                     resp.push(null);
                 }
