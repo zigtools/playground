@@ -1,7 +1,7 @@
 import { WASI, PreopenDirectory, Fd, File, ConsoleStdout, OpenFile, Inode } from "@bjorn3/browser_wasi_shim";
 import { getLatestZigArchive } from "../utils";
 // @ts-ignore
-import zlsWasm from "url:../zig.wasm";
+import zlsWasm from "../zig.wasm?url&inline";
 
 let currentlyRunning = false;
 async function run(source: string) {

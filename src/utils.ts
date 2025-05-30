@@ -1,11 +1,11 @@
 // @ts-ignore
-import zigTarGz from "url:./zig.tar.gz";
+import zigTarGz from "./zig.tar.gz?inline";
 import { untar } from "@andrewbranch/untar.js";
 import { Directory, File } from "@bjorn3/browser_wasi_shim";
 
 export async function getLatestZigArchive() {
     const ds = new DecompressionStream("gzip");
-    const zigTarResponse = new Response((await fetch(zigTarGz, {})).body?.pipeThrough(ds));
+    const zigTarResponse = new Response((await fetch(zigTarGz)).body?.pipeThrough(ds));
     const entries = await untar(await zigTarResponse.arrayBuffer());
 
     let root: TreeNode = new Map();

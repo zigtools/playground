@@ -1,11 +1,17 @@
 import { EditorState } from "@codemirror/state"
 import { keymap } from "@codemirror/view"
-import { EditorView, basicSetup, minimalSetup } from "codemirror"
+import { EditorView, basicSetup } from "codemirror"
 import { JsonRpcMessage, LspClient } from "./lsp";
 import { Sharer } from "./sharer";
 import { indentWithTab } from "@codemirror/commands";
 import { indentUnit } from "@codemirror/language";
 import { oneDark } from "@codemirror/theme-one-dark";
+// @ts-ignore
+import ZLSWorker from './workers/zls.ts?worker';
+// @ts-ignore
+import ZigWorker from './workers/zig.ts?worker';
+// @ts-ignore
+import RunnerWorker from './workers/runner.ts?worker';
 
 export default class ZlsClient extends LspClient {
     public worker: Worker;
@@ -26,6 +32,7 @@ export default class ZlsClient extends LspClient {
 
         // Atomics mess up debug functionality, so this unfreezes
         // the service worker when you want to inspect a logged object
+        // @ts-ignore
         window.unfreeze = () => {
             Atomics.store(new Int32Array(this.sharer.stdinBlockBuffer), 0, 1);
             Atomics.notify(new Int32Array(this.sharer.stdinBlockBuffer), 0);
@@ -109,10 +116,7 @@ export default class ZlsClient extends LspClient {
     }
 }
 
-let client = new ZlsClient(new Worker(
-    new URL("workers/zls.ts", import.meta.url),
-    {type: "module"}
-));
+let client = new ZlsClient(new ZLSWorker());
 
 let editor = (async () => {
     await client.initialize();
@@ -148,16 +152,13 @@ function scrollOutputToEnd() {
     outputs.scrollTo(0, outputs.scrollHeight!);
 }
 
-function changeTab(newTab) {
+function changeTab(newTab: string) {
     for (const old of document.querySelectorAll("#outputs-tabs>*")) old.classList.remove("shown");
     document.getElementById(newTab)?.classList.add("shown");
     scrollOutputToEnd();
 }
 
-let zigWorker = new Worker(
-    new URL("workers/zig.ts", import.meta.url),
-    {type: "module"}
-);
+let zigWorker = new ZigWorker();
 
 zigWorker.onmessage = ev => {
     if (ev.data.stderr) {
@@ -170,10 +171,7 @@ zigWorker.onmessage = ev => {
         outputs_tab_selector.value = "zig-output";
         changeTab("zig-output");
 
-        let runnerWorker = new Worker(
-            new URL("workers/runner.ts", import.meta.url),
-            {type: "module"}
-        );
+        let runnerWorker = new RunnerWorker();
         
         runnerWorker.postMessage({run: ev.data.compiled});
 

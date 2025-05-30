@@ -1,8 +1,10 @@
 {
   "name": "playground",
+  "type": "module",
   "scripts": {
-    "bundle": "node_modules\\.bin\\rollup editor.mjs -f iife -o editor.bundle.js -p @rollup\\plugin-node-resolve",
-    "serve": "parcel 404.html"
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
   },
   "dependencies": {
     "@andrewbranch/untar.js": "^1.0.3",
@@ -20,15 +22,10 @@
     "vscode-languageserver-protocol": "^3.17.3"
   },
   "devDependencies": {
-    "@types/node": "^18.15.11",
-    "parcel": "^2.8.3"
+    "typescript": "~5.7.2",
+    "vite": "^6.3.1"
   },
   "browserslist": [
     "since 2017-06"
-  ],
-  "@parcel/transformer-css": {
-    "drafts": {
-      "nesting": true
-    }
-  }
+  ]
 }

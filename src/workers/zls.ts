@@ -2,7 +2,7 @@ import { WASI, PreopenDirectory, Fd, ConsoleStdout, Directory } from "@bjorn3/br
 import { getLatestZigArchive } from "../utils";
 import { Sharer } from "../sharer";
 // @ts-ignore
-import zlsWasm from "url:../zls.wasm";
+import zlsWasm from "../zls.wasm?url&inline";
 
 let sharer: Sharer = new Sharer();
 
