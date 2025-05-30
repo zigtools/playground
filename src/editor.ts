@@ -144,12 +144,12 @@ pub fn main() !void {
 })();
 
 function scrollOutputToEnd() {
-    const outputs = document.getElementById("outputs__tabs")!;
+    const outputs = document.getElementById("outputs-tabs")!;
     outputs.scrollTo(0, outputs.scrollHeight!);
 }
 
 function changeTab(newTab) {
-    for (const old of document.querySelectorAll("#outputs__tabs>*")) old.classList.remove("shown");
+    for (const old of document.querySelectorAll("#outputs-tabs>*")) old.classList.remove("shown");
     document.getElementById(newTab)?.classList.add("shown");
     scrollOutputToEnd();
 }
@@ -189,13 +189,13 @@ zigWorker.onmessage = ev => {
     }
 }
 
-const outputs_tab_selector = document.getElementById("outputs__tab")! as HTMLSelectElement;
+const outputs_tab_selector = document.getElementById("outputs-tab")! as HTMLSelectElement;
 
 outputs_tab_selector.addEventListener("change", () => {
     changeTab(outputs_tab_selector.value);
 });
 
-const outputs_run = document.getElementById("outputs__run")! as HTMLButtonElement;
+const outputs_run = document.getElementById("outputs-run")! as HTMLButtonElement;
 
 outputs_run.addEventListener("click", async () => {
     document.getElementById("zig-stderr")!.innerHTML = "";
@@ -209,7 +209,7 @@ outputs_run.addEventListener("click", async () => {
     changeTab("zig-stderr");
 });
 
-const outputs_share = document.getElementById("outputs__share")! as HTMLButtonElement;
+const outputs_share = document.getElementById("outputs-share")! as HTMLButtonElement;
 
 outputs_share.addEventListener("click", async () => {
     const response = await fetch(`${endpoint}/put`, {
@@ -223,7 +223,7 @@ outputs_share.addEventListener("click", async () => {
     const hash = (await response.text()).slice(0, 6);
     history.pushState(null, "", `/${hash}`);
 
-    (document.getElementById("popup__input")! as HTMLInputElement).value = `https://playground.zigtools.org/${hash}`;
+    (document.getElementById("popup-input")! as HTMLInputElement).value = `https://playground.zigtools.org/${hash}`;
     document.getElementById("popup")?.classList.add("shown");
 });
 
@@ -243,14 +243,14 @@ function getPasteHash(): string | null {
     return null;
 }
 
-document.getElementById("popup__copy")?.addEventListener("click", () => {
-    var c = document.getElementById("popup__input") as HTMLInputElement;
+document.getElementById("popup-copy")?.addEventListener("click", () => {
+    var c = document.getElementById("popup-input") as HTMLInputElement;
     c.select();
     document.execCommand("copy");
 
-    document.getElementById("popup__copy")!.innerHTML = "Copied!"
+    document.getElementById("popup-copy")!.innerHTML = "Copied!"
 });
 
-document.getElementById("popup__close")?.addEventListener("click", () => {
+document.getElementById("popup-close")?.addEventListener("click", () => {
     document.getElementById("popup")?.classList.remove("shown");
 });

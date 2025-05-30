@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Zig+ZLS Playground</title>
 
-    <link rel="stylesheet" href="style/style.scss">
+    <link rel="stylesheet" href="style/style.css">
 
     <script src="src/enable_coop_coep.js"></script>
 </head>
@@ -21,10 +21,10 @@
 
     <div id="popup">
         <h2>Grab the share link below:</h2>
-        <input id="popup__input" type="text" readonly>
+        <input id="popup-input" type="text" readonly>
         <div>
-            <button id="popup__copy" class="primary">Copy</button>
-            <button id="popup__close">Close</button>
+            <button id="popup-copy" class="primary">Copy</button>
+            <button id="popup-close">Close</button>
         </div>
     </div>
 
@@ -32,14 +32,14 @@
         <div id="split-pane">
             <div id="editor"></div>
             <div id="outputs">
-                <div id="outputs__toolbar">
+                <div id="outputs-toolbar">
                     <div>
-                        <button id="outputs__run" class="primary">Run</button>
-                        <button id="outputs__share">Share</button>
+                        <button id="outputs-run" class="primary">Run</button>
+                        <button id="outputs-share">Share</button>
                     </div>
     
                     <div>
-                        <select id="outputs__tab">
+                        <select id="outputs-tab">
                             <option value="zls-stderr">ZLS Debug</option>
                             <option value="zig-stderr" selected>Zig Debug</option>
                             <option value="zig-output">Zig Output</option>
@@ -47,7 +47,7 @@
                     </div>
                 </div>
     
-                <div id="outputs__tabs">
+                <div id="outputs-tabs">
                     <div id="zls-stderr">
     
                     </div>

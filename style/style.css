@@ -1,8 +1,17 @@
-@use "reset";
-@use "theme";
+@import "reset.css";
 
 :root {
     color-scheme: dark;
+    --foreground: hsl(0, 0%, 90%);
+    --background: hsl(0, 0%, 10%);
+
+    --btn-background: hsl(0, 0%, 20%);
+    --btn-background--hover: hsl(0, 0%, 25%);
+
+    --popup-background: hsl(0, 0%, 15%);
+
+    --btn-background--primary: hsl(37, 50%, 24%);
+    --btn-background--primary--hover: hsl(37, 93%, 30%);
 }
 
 body, button, input, select {
@@ -17,8 +26,8 @@ html, body {
     margin: 0;
     padding: 0;
     
-    color: theme.$foreground;
-    background-color: theme.$background;
+    color: var(--foreground);
+    background-color: var(--background);
 }
 
 nav {
@@ -71,7 +80,7 @@ i {
 #split-pane {
     display: flex;
 
-    // gap: 1rem;
+    /* gap: 1rem; */
 
     height: 100%;
 
@@ -84,7 +93,7 @@ i {
     }
 }
 
-#outputs__tabs, code {
+#output-tabs, code {
     font-family: monospace;
 }
 
@@ -116,17 +125,17 @@ button {
     letter-spacing: -0.011em;
 
     cursor: pointer;
-    background-color: theme.$btn-background;
+    background-color: var(--btn-background);
 
     &:hover {
-        background-color: theme.$btn-background--hover;
+        background-color: var(--btn-background--hover);
     }
 
     &.primary {
-        background-color: theme.$btn-background--primary;
+        background-color: var(--btn-background--primary);
 
         &:hover {
-            background-color: theme.$btn-background--primary--hover;
+            background-color: var(--btn-background--primary--hover);
         }
     }
 }
@@ -146,7 +155,7 @@ select {
     letter-spacing: -0.011em;
 
     cursor: pointer;
-    background-color: theme.$btn-background;
+    background-color: var(--btn-background);
 }
 
 input {
@@ -163,7 +172,7 @@ input {
     text-align: center;
     letter-spacing: -0.011em;
 
-    background-color: theme.$btn-background;
+    background-color: var(--btn-background);
 }
 
 #outputs {
@@ -175,30 +184,30 @@ input {
     align-items: stretch;
 
     padding: 1rem;
+}
 
-    &__toolbar {
-        display: flex;
-        justify-content: space-between;
-    }
+#outputs-toolbar {
+    display: flex;
+    justify-content: space-between;
+}
 
-    &__tabs {
-        border: 1px solid theme.$foreground;
-        border-radius: 3px;
+#outputs-tabs {
+    border: 1px solid var(--foreground);
+    border-radius: 3px;
 
-        padding: 1rem;
+    padding: 1rem;
 
-        flex-grow: 1;
+    flex-grow: 1;
 
-        line-height: 1.75;
+    line-height: 1.75;
 
-        overflow-y: auto;
+    overflow-y: auto;
 
-        &>* {
-            display: none;
-    
-            &.shown {
-                display: block;
-            }
+    &>* {
+        display: none;
+
+        &.shown {
+            display: block;
         }
     }
 }
@@ -211,7 +220,7 @@ input {
     
     transform: translate(-50%, -50%);
 
-    border: 1px solid theme.$foreground;
+    border: 1px solid var(--foreground);
     border-radius: 3px;
 
     display: none;
@@ -222,18 +231,18 @@ input {
     padding: 2rem;
 
     z-index: 100;
-    background-color: theme.$popup-background;
+    background-color: var(--popup-background);
 
     &.shown {
         display: flex;
     }
 
-    h2 {
+    & h2 {
         font-weight: 2rem;
         font-weight: 700;
     }
     
-    div {
+    & div {
         display: flex;
         flex-direction: row;
         justify-content: stretch;
