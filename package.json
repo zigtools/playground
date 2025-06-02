@@ -15,7 +15,6 @@
     "@codemirror/lint": "^6.2.0",
     "@codemirror/state": "^6.2.0",
     "@codemirror/theme-one-dark": "^6.1.1",
-    "@codemirror/tooltip": "^0.19.16",
     "@codemirror/view": "^6.9.3",
     "@lezer/highlight": "^1.1.4",
     "codemirror": "^6.0.1",
