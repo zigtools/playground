@@ -270,12 +270,12 @@ export abstract class LspClient {
             ViewPlugin.define((view) => (plugin = new LspPlugin(view, allowHtmlContent)), {
                 decorations: v => v.decorations,
             }),
-            // hoverTooltip(
-            //     (view, pos) => plugin?.requestHoverTooltip(
-            //         view,
-            //         offsetToPos(view.state.doc, pos)
-            //     ) ?? null
-            // ),
+            hoverTooltip(
+                (view, pos) => plugin?.requestHoverTooltip(
+                    view,
+                    offsetToPos(view.state.doc, pos)
+                ) ?? null
+            ),
             foldService.of((state, lineStart, lineEnd) => {
                 const startLine = state.doc.lineAt(lineStart);
                 const range = plugin?.foldingRangeMap.get(startLine.number - 1);
@@ -593,9 +593,7 @@ class LspPlugin implements PluginValue {
         if (pos === null) return null;
         return { pos, end, create () {
             const dom = document.createElement("div");
-            dom.className = "cm-tooltip-cursor";
-            if (this.allowHtmlContent) dom.innerHTML = formatContents(contents);
-            else dom.textContent = formatContents(contents);
+            dom.textContent = formatContents(contents);
             return {dom};
         }, above: true };
     }
