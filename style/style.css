@@ -28,17 +28,7 @@ html, body {
     
     color: var(--foreground);
     background-color: var(--background);
-}
-
-nav {
-    display: flex;
-
-    align-items: center;
-    justify-content: space-between;
-
-    padding: 1rem;
-
-    background-color: hsl(0, 0%, 20%);
+    font-size: 13pt;
 }
 
 body {
@@ -55,13 +45,21 @@ main {
     height: calc(100% - 80px);
 }
 
-h1 {
-    font-size: 1.5em;
-    font-weight: 600;
-}
+footer {
+    display: flex;
+    padding: 1rem;
+    justify-content: space-between;
 
-a {
-    color: hsl(200, 100%, 80%);
+    &>h1 {
+        font-size: 1em;
+        font-weight: 900;
+        letter-spacing: -1px;
+    
+        &>a {
+            color: #f7a41d;
+            text-decoration: none;
+        }
+    }
 }
 
 p {
@@ -76,29 +74,59 @@ i {
     font-style: italic;
 }
 
+a {
+    color: hsl(200, 100%, 80%);
+    text-decoration: underline;
+}
 
 #split-pane {
     display: flex;
 
-    /* gap: 1rem; */
-
+    flex-direction: column;
     height: 100%;
+    overflow: hidden;
 
     &>*:first-child {
-        width: 60%;
+        height: var(--editor-height-percent);
+    }
+
+    &>#resize-bar {
+        height: 0.85rem;
     }
 
     &>*:last-child {
-        width: 40%;
+        height: calc(100% - 0.85rem - var(--editor-height-percent));
     }
 }
 
-#output-tabs, code {
+#resize-bar {
+    position: relative;
+    width: 100%;
+    cursor: row-resize;
+    background-color: hsl(0, 0%, 15%);
+}
+
+#resize-bar::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 5rem;
+    border: 2px dashed hsl(0, 0%, 50%);
+    border-radius: 100px;
+    transform: translate(-50%,-50%);
+}
+
+#outputs-tabs, code {
     font-family: monospace;
 }
 
 .cm-editor {
     height: 100%;
+}
+
+.cm-focused {
+    outline: none !important;
 }
 
 .cm-tooltip {

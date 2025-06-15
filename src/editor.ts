@@ -137,7 +137,7 @@ zigWorker.onmessage = ev => {
         scrollOutputToEnd();
         return;
     } else if (ev.data.compiled) {
-        outputs_tab_selector.value = "zig-output";
+        outputsTabSelector.value = "zig-output";
         changeTab("zig-output");
 
         let runnerWorker = new RunnerWorker();
@@ -156,15 +156,46 @@ zigWorker.onmessage = ev => {
     }
 }
 
-const outputs_tab_selector = document.getElementById("outputs-tab")! as HTMLSelectElement;
+const splitPane = document.getElementById("split-pane")! as HTMLDivElement;
+const resizeBar = document.getElementById("resize-bar")! as HTMLDivElement;
 
-outputs_tab_selector.addEventListener("change", () => {
-    changeTab(outputs_tab_selector.value);
+function clamp(value, min, max) {
+    if (value < min) {
+        return min;
+    } else if (value > max) {
+        return max;
+    } else {
+        return value;
+    }
+}
+
+let resizing = false;
+resizeBar.addEventListener("mousedown", event => {
+    if (event.buttons & 1) {
+        resizing = true;
+        document.body.style.userSelect = "none";
+        document.body.style.cursor = "row-resize";
+    }
+});
+window.addEventListener("mousemove", event => {
+    if (resizing) {
+        const percent = clamp(event.clientY / window.innerHeight * 100, 40, 80);
+        splitPane.style.setProperty("--editor-height-percent", `${percent}%`);
+    }
+});
+window.addEventListener("mouseup", event => {
+    resizing = false;
+    document.body.style.removeProperty("user-select");
+    document.body.style.removeProperty("cursor");
 });
 
-const outputs_run = document.getElementById("outputs-run")! as HTMLButtonElement;
+const outputsTabSelector = document.getElementById("outputs-tab")! as HTMLSelectElement;
+outputsTabSelector.addEventListener("change", () => {
+    changeTab(outputsTabSelector.value);
+});
 
-outputs_run.addEventListener("click", async () => {
+const outputsRun = document.getElementById("outputs-run")! as HTMLButtonElement;
+outputsRun.addEventListener("click", async () => {
     document.getElementById("zig-stderr")!.innerHTML = "";
     document.getElementById("zig-output")!.innerHTML = "";
 
@@ -172,6 +203,6 @@ outputs_run.addEventListener("click", async () => {
         run: (await editor).state.doc.toString(),
     });
 
-    outputs_tab_selector.value = "zig-stderr";
+    outputsTabSelector.value = "zig-stderr";
     changeTab("zig-stderr");
 });

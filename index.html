@@ -9,17 +9,10 @@
     <link rel="stylesheet" href="style/style.css">
 </head>
 <body>
-    <nav>
-        <h1>Zig Playground</h1>
-        
-        <div>
-            <strong>Note:</strong> The self-hosted WebAssembly backend is still experimental: compiler bugs/crashes are not unexpected.
-        </div>
-    </nav>
-
     <main>
-        <div id="split-pane">
+        <div id="split-pane" style="--editor-height-percent: 80%;">
             <div id="editor"></div>
+            <div id="resize-bar"></div>
             <div id="outputs">
                 <div id="outputs-toolbar">
                     <div>
@@ -49,6 +42,11 @@
             </div>
         </div>
     </main>
+
+    <footer>
+        <h1><a href="https://playground.zigtools.org">playground</a></h1>
+        <span>A <a href="https://zigtools.org">zigtools</a> initiative.</span>
+    </footer>
 
     <script src="/src/editor.ts" type="module"></script>
 </body>
