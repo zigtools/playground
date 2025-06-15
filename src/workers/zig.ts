@@ -3,6 +3,13 @@ import { getLatestZigArchive } from "../utils";
 // @ts-ignore
 import zlsWasm from "../zig.wasm?url";
 
+function stderrOutput(): ConsoleStdout {
+    const dec = new TextDecoder("utf-8", { fatal: false });
+    return new ConsoleStdout((buffer) => {
+        postMessage({ stderr: dec.decode(buffer, { stream: true }) });
+    });
+}
+
 let currentlyRunning = false;
 async function run(source: string) {
     if (currentlyRunning) return;
@@ -26,8 +33,8 @@ async function run(source: string) {
     let env = [];
     let fds = [
         new OpenFile(new File([])), // stdin
-        ConsoleStdout.lineBuffered((line) => postMessage({ stderr: line })), // stdout
-        ConsoleStdout.lineBuffered((line) => postMessage({ stderr: line })), // stderr
+        stderrOutput(), // stdout
+        stderrOutput(), // stderr
         new PreopenDirectory(".", new Map<string, Inode>([
             ["main.zig", new File(new TextEncoder().encode(source))],
         ])),
@@ -36,16 +43,12 @@ async function run(source: string) {
     ] satisfies Fd[];
     let wasi = new WASI(args, env, fds, { debug: false });
 
-    postMessage({
-        stderr: "Creating WebAssembly instance...",
-    });
-
     const { instance } = await WebAssembly.instantiateStreaming(fetch(zlsWasm), {
         "wasi_snapshot_preview1": wasi.wasiImport,
     });
 
     postMessage({
-        stderr: "Compiling...",
+        stderr: "Compiling...\n",
     });
 
     try {
@@ -63,6 +66,7 @@ async function run(source: string) {
         postMessage({
             stderr: `${err}`,
         });
+        postMessage({ failed: true });
     }
 
     currentlyRunning = false;

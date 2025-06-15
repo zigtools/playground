@@ -9,42 +9,19 @@
     <link rel="stylesheet" href="style/style.css">
 </head>
 <body>
+    <button id="run">Run</button>
+
     <main>
-        <div id="split-pane" style="--editor-height-percent: 80%;">
+        <div id="split-pane" style="--editor-height-percent: 100%;">
             <div id="editor"></div>
             <div id="resize-bar"></div>
-            <div id="outputs">
-                <div id="outputs-toolbar">
-                    <div>
-                        <button id="outputs-run" class="primary">Run</button>
-                    </div>
-    
-                    <div>
-                        <select id="outputs-tab">
-                            <option value="zls-stderr">ZLS Debug</option>
-                            <option value="zig-stderr" selected>Zig Debug</option>
-                            <option value="zig-output">Zig Output</option>
-                        </select>
-                    </div>
-                </div>
-    
-                <div id="outputs-tabs">
-                    <div id="zls-stderr">
-    
-                    </div>
-    
-                    <div id="zig-stderr" class="shown">
-    
-                    </div>
-    
-                    <pre id="zig-output"></pre>
-                </div>
-            </div>
+            <div id="output"></div>
         </div>
     </main>
 
     <footer>
         <h1><a href="https://playground.zigtools.org">playground</a></h1>
+        <span><span id="warning">Warning</span> Zig's self-hosted WebAssembly backend is still experimental!</span>
         <span>A <a href="https://zigtools.org">zigtools</a> initiative.</span>
     </footer>
 

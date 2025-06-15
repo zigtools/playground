@@ -2,7 +2,7 @@ const std = @import("std");
 
 pub fn build(b: *std.Build) void {
     const target = b.resolveTargetQuery(.{ .cpu_arch = .wasm32, .os_tag = .wasi });
-    const optimize: std.builtin.OptimizeMode = .ReleaseSmall;
+    const optimize: std.builtin.OptimizeMode = .ReleaseFast;
 
     const zls = b.dependency("zls", .{
         .target = target,

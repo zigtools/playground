@@ -84,7 +84,11 @@ export fn call() void {
     output_message_starts.clearRetainingCapacity();
     output_message_bytes.clearRetainingCapacity();
 
-    server.sendJsonMessageSync(input_bytes.items) catch |err| std.debug.panic("{}", .{err});
+    allocator.free(
+        server.sendJsonMessageSync(input_bytes.items) catch |err|
+            std.debug.panic("{}", .{err}) orelse
+            return,
+    );
 }
 
 export fn outputMessageCount() usize {

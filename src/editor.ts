@@ -117,40 +117,41 @@ pub fn main() !void {
 })();
 
 function scrollOutputToEnd() {
-    const outputs = document.getElementById("outputs-tabs")!;
+    const outputs = document.getElementById("output")!;
     outputs.scrollTo(0, outputs.scrollHeight!);
-}
-
-function changeTab(newTab: string) {
-    for (const old of document.querySelectorAll("#outputs-tabs>*")) old.classList.remove("shown");
-    document.getElementById(newTab)?.classList.add("shown");
-    scrollOutputToEnd();
 }
 
 let zigWorker = new ZigWorker();
 
 zigWorker.onmessage = ev => {
     if (ev.data.stderr) {
-        const line = document.createElement("div");
-        line.innerText = ev.data.stderr;
-        document.getElementById("zig-stderr")?.append(line);
+        document.querySelector(".zig-output:last-child")!.textContent += ev.data.stderr;
         scrollOutputToEnd();
         return;
+    } else if (ev.data.failed) {
+        const outputSplit = document.createElement("div");
+        outputSplit.classList.add("output-split");
+        document.getElementById("output")!.appendChild(outputSplit);
     } else if (ev.data.compiled) {
-        outputsTabSelector.value = "zig-output";
-        changeTab("zig-output");
-
         let runnerWorker = new RunnerWorker();
+
+        const zigOutput = document.createElement("div");
+        zigOutput.classList.add("runner-output");
+        zigOutput.classList.add("latest");
+        document.getElementById("output")!.appendChild(zigOutput);
         
         runnerWorker.postMessage({run: ev.data.compiled});
 
         runnerWorker.onmessage = rev => {
             if (rev.data.stderr) {
-                document.getElementById("zig-output")!.innerHTML += rev.data.stderr;
+                document.querySelector(".runner-output:last-child")!.textContent += rev.data.stderr;
                 scrollOutputToEnd();
                 return;
             } else if (rev.data.done) {
                 runnerWorker.terminate();
+                const outputSplit = document.createElement("div");
+                outputSplit.classList.add("output-split");
+                document.getElementById("output")!.appendChild(outputSplit);
             }
         }
     }
@@ -179,7 +180,7 @@ resizeBar.addEventListener("mousedown", event => {
 });
 window.addEventListener("mousemove", event => {
     if (resizing) {
-        const percent = clamp(event.clientY / window.innerHeight * 100, 40, 80);
+        const percent = clamp(event.clientY / window.innerHeight * 100, 40, 100);
         splitPane.style.setProperty("--editor-height-percent", `${percent}%`);
     }
 });
@@ -189,20 +190,21 @@ window.addEventListener("mouseup", event => {
     document.body.style.removeProperty("cursor");
 });
 
-const outputsTabSelector = document.getElementById("outputs-tab")! as HTMLSelectElement;
-outputsTabSelector.addEventListener("change", () => {
-    changeTab(outputsTabSelector.value);
-});
-
-const outputsRun = document.getElementById("outputs-run")! as HTMLButtonElement;
+const outputsRun = document.getElementById("run")! as HTMLButtonElement;
 outputsRun.addEventListener("click", async () => {
-    document.getElementById("zig-stderr")!.innerHTML = "";
-    document.getElementById("zig-output")!.innerHTML = "";
+    for (const zo of document.querySelectorAll(".zig-output")) {
+        zo.classList.remove("latest");
+    }
+    for (const ro of document.querySelectorAll(".runner-output")) {
+        ro.classList.remove("latest");
+    }
+
+    const zigOutput = document.createElement("div");
+    zigOutput.classList.add("zig-output");
+    zigOutput.classList.add("latest");
+    document.getElementById("output")!.appendChild(zigOutput);
 
     zigWorker.postMessage({
         run: (await editor).state.doc.toString(),
     });
-
-    outputsTabSelector.value = "zig-stderr";
-    changeTab("zig-stderr");
 });

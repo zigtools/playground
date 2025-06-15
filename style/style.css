@@ -14,7 +14,7 @@
     --btn-background--primary--hover: hsl(37, 93%, 30%);
 }
 
-body, button, input, select {
+body, button {
     font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
 }
 
@@ -47,8 +47,13 @@ main {
 
 footer {
     display: flex;
-    padding: 1rem;
+    padding: 0.5rem;
+    text-align: center;
+    align-items: center;
     justify-content: space-between;
+    font-size: 0.85em;
+    background-color: hsl(0, 0%, 10%);
+    line-height: 1.25;
 
     &>h1 {
         font-size: 1em;
@@ -59,6 +64,13 @@ footer {
             color: #f7a41d;
             text-decoration: none;
         }
+    }
+
+    #warning {
+        margin-right: 0.25rem;
+        border-radius: 3px;
+        padding: 0.075rem 0.30rem;
+        background-color: hsl(40, 75%, 25%);
     }
 }
 
@@ -91,11 +103,11 @@ a {
     }
 
     &>#resize-bar {
-        height: 0.85rem;
+        height: 0.5rem;
     }
 
     &>*:last-child {
-        height: calc(100% - 0.85rem - var(--editor-height-percent));
+        height: calc(100% - 0.5rem - var(--editor-height-percent));
     }
 }
 
@@ -104,6 +116,14 @@ a {
     width: 100%;
     cursor: row-resize;
     background-color: hsl(0, 0%, 15%);
+}
+
+#resize-bar::before {
+    content: "";
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    transform: scale(3);
 }
 
 #resize-bar::after {
@@ -139,103 +159,53 @@ ul {
     line-height: 1.5;
 }
 
-button {
-    display: inline-block;
-
+#run {
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    z-index: 1;
     border: none;
     border-radius: 3px;
-    
-    padding: 0.5rem 2.25rem;
-
+    padding: 0.5rem 1.85rem;
     font-size: 1em;
     font-weight: 700;
-    text-align: center;
-    letter-spacing: -0.011em;
-
     cursor: pointer;
-    background-color: var(--btn-background);
-
-    &:hover {
-        background-color: var(--btn-background--hover);
-    }
-
-    &.primary {
-        background-color: var(--btn-background--primary);
-
-        &:hover {
-            background-color: var(--btn-background--primary--hover);
-        }
-    }
+    background-color: hsl(37, 93%, 30%);
 }
 
-select {
-    display: inline-block;
-
-    border: none;
-    outline: none;
-    border-radius: 3px;
-    
-    padding: 0.5rem 2.25rem;
-
-    font-size: 1em;
-    font-weight: 700;
-    text-align: center;
-    letter-spacing: -0.011em;
-
-    cursor: pointer;
-    background-color: var(--btn-background);
-}
-
-input {
-    display: inline-block;
-
-    border: none;
-    outline: none;
-    border-radius: 3px;
-    
-    padding: 0.5rem;
-
-    font-size: 1em;
-    font-weight: 700;
-    text-align: center;
-    letter-spacing: -0.011em;
-
-    background-color: var(--btn-background);
-}
-
-#outputs {
+#output {
     height: 100%;
-
-    display: flex;
-    gap: 1rem;
-    flex-direction: column;
-    align-items: stretch;
-
-    padding: 1rem;
-}
-
-#outputs-toolbar {
-    display: flex;
-    justify-content: space-between;
-}
-
-#outputs-tabs {
-    border: 1px solid var(--foreground);
-    border-radius: 3px;
-
-    padding: 1rem;
-
-    flex-grow: 1;
-
-    line-height: 1.75;
-
+    background-color: hsl(0, 0%, 5%);
     overflow-y: auto;
 
-    &>* {
-        display: none;
+    &>div {
+        white-space: pre;
+        font-family: monospace;
+    }
 
-        &.shown {
-            display: block;
+    &>.zig-output {
+        padding: 1rem;
+        color: hsl(0, 0%, 90%);
+        background-color: hsl(37, 93%, 5%);
+    
+        &.latest {
+            background-color: hsl(37, 93%, 10%);
         }
+    }
+
+    &>.runner-output {
+        padding: 1rem;
+        color: hsl(0, 0%, 90%);
+        background-color: hsl(200, 93%, 5%);
+    
+        &.latest {
+            background-color: hsl(200, 93%, 10%);
+        }
+    }
+
+    &>.output-split {
+        width: 100%;
+        height: 1px;
+        background-color: white;
     }
 }
