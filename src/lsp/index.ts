@@ -513,6 +513,14 @@ class LspPlugin implements PluginValue {
                 case "decorator":
                     codeMirrorTag = tags.modifier;
                     break;
+
+                case "builtin":
+                    codeMirrorTag = tags.special(tags.variableName);
+                    break;
+                case "keywordLiteral":
+                    codeMirrorTag = tags.special(tags.literal);
+                    break;
+
                 default:
                     break;
             }
