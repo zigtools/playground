@@ -28,34 +28,27 @@ fn logFn(
         .debug => .Debug,
     };
     const json_message = zls.lsp.bufPrintLogMessage(&buffer, lsp_message_type, format, args);
-    transport.writeJsonMessage(json_message) catch {};
+    WasmTransport.any().writeJsonMessage(json_message) catch {};
 }
 
 const WasmTransport = struct {
-    did_read: bool,
-
-    pub fn any(_: *WasmTransport) AnyTransport {
+    pub fn any() AnyTransport {
         return .{ .impl = .{
-            .transport = &transport,
+            .transport = undefined,
             .readJsonMessage = @ptrCast(&readJsonMessage),
             .writeJsonMessage = @ptrCast(&writeJsonMessage),
         } };
     }
 
     pub fn readJsonMessage(
-        _: *WasmTransport,
+        _: *anyopaque,
         _: std.mem.Allocator,
     ) (std.mem.Allocator.Error || AnyTransport.ReadError)![]u8 {
-        if (transport.did_read) {
-            return error.EndOfStream;
-        }
-
-        defer transport.did_read = true;
-        return try allocator.dupe(u8, input_bytes.items);
+        unreachable;
     }
 
     pub fn writeJsonMessage(
-        _: *WasmTransport,
+        _: *anyopaque,
         json_message: []const u8,
     ) AnyTransport.WriteError!void {
         output_message_starts.append(
@@ -70,7 +63,6 @@ const WasmTransport = struct {
 };
 
 var server: *zls.Server = undefined;
-var transport: WasmTransport = .{ .did_read = false };
 
 var input_bytes: std.ArrayListUnmanaged(u8) = .empty;
 
@@ -79,7 +71,7 @@ var output_message_bytes: std.ArrayListUnmanaged(u8) = .empty;
 
 export fn createServer() void {
     server = zls.Server.create(allocator) catch @panic("server creation failed");
-    server.setTransport(transport.any());
+    server.setTransport(WasmTransport.any());
 }
 
 export fn allocMessage(len: usize) [*]const u8 {
@@ -89,14 +81,10 @@ export fn allocMessage(len: usize) [*]const u8 {
 }
 
 export fn call() void {
-    transport.did_read = false;
     output_message_starts.clearRetainingCapacity();
     output_message_bytes.clearRetainingCapacity();
 
-    server.loop() catch |err| switch (err) {
-        error.EndOfStream => {},
-        else => std.debug.panic("{any}", .{err}),
-    };
+    server.sendJsonMessageSync(input_bytes.items) catch |err| std.debug.panic("{}", .{err});
 }
 
 export fn outputMessageCount() usize {
