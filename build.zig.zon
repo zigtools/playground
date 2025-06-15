@@ -1,0 +1,13 @@
+.{
+    .name = .playground,
+    .version = "0.0.0",
+    .fingerprint = 0xdc188848360fd988, // Changing this has security and trust implications.
+    .minimum_zig_version = "0.15.0-dev.646+ef35c3d5f",
+    .dependencies = .{
+        .zls = .{
+            .url = "git+https://github.com/zigtools/zls#48fb941edc5d301135aca8b271a19ab4d07377d0",
+            .hash = "zls-0.15.0-dev-rmm5frEoIwDJfOe9g8dELiMRx6w8g_FkeAjfz6ZInlRN",
+        },
+    },
+    .paths = .{""},
+}

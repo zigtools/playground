@@ -1,4 +1,4 @@
-# Zig and ZLS in the browser
+# Zig Playground
 
 Works pretty well in a bunch of browsers, but note the required security headers.
 
@@ -33,7 +33,3 @@ The `./compile.sh` script can be used to create these artifacts:
 ```
 
 Compiling Zig and ZLS may require different Zig compiler versions.
-
-## TODOs
-
-- [ ] Stop using `SharedArrayBuffer`s (they're awesome but a nightmare to deploy)

@@ -2,7 +2,6 @@ import { EditorState } from "@codemirror/state"
 import { keymap } from "@codemirror/view"
 import { EditorView, basicSetup } from "codemirror"
 import { JsonRpcMessage, LspClient } from "./lsp";
-import { Sharer } from "./sharer";
 import { indentWithTab } from "@codemirror/commands";
 import { indentUnit } from "@codemirror/language";
 import { oneDark } from "@codemirror/theme-one-dark";
@@ -15,36 +14,22 @@ import RunnerWorker from './workers/runner.ts?worker';
 
 export default class ZlsClient extends LspClient {
     public worker: Worker;
-    public sharer: Sharer;
 
     constructor(worker: Worker) {
         super("file:///", []);
         this.worker = worker;
-        this.sharer = Sharer.init();
 
         this.worker.addEventListener("message", this.messageHandler);
-        this.worker.postMessage({
-            indexBuffer: this.sharer.indexBuffer,
-            lockBuffer: this.sharer.lockBuffer,
-            stdinBlockBuffer: this.sharer.stdinBlockBuffer,
-            dataBuffer: this.sharer.dataBuffer,
-        });
-
-        // Atomics mess up debug functionality, so this unfreezes
-        // the service worker when you want to inspect a logged object
-        // @ts-ignore
-        window.unfreeze = () => {
-            Atomics.store(new Int32Array(this.sharer.stdinBlockBuffer), 0, 1);
-            Atomics.notify(new Int32Array(this.sharer.stdinBlockBuffer), 0);
-        }
     }
 
     private messageHandler = (ev: MessageEvent) => {
-        if (ev.data?.method == "window/logMessage" || ev.data.stderr) {
+        const data = JSON.parse(ev.data);
+
+        if (data.method == "window/logMessage" || data.stderr) {
             let logLevel = "[?????] ";
             let color = "white";
-            if (!ev.data.stderr) {
-                switch (ev.data.params.type) {
+            if (!data.stderr) {
+                switch (data.params.type) {
                     case 5:
                         logLevel = "[DEBUG] ";
                         color = "white";
@@ -77,7 +62,7 @@ export default class ZlsClient extends LspClient {
             logLevelSpan.textContent = logLevel;
 
             const logTextSpan = document.createElement('span');
-            logTextSpan.textContent = ev.data.stderr ? ev.data.stderr : ev.data.params.message;
+            logTextSpan.textContent = data.stderr ? data.stderr : data.params.message;
 
             line.appendChild(logLevelSpan);
             line.appendChild(logTextSpan);
@@ -85,28 +70,15 @@ export default class ZlsClient extends LspClient {
             document.getElementById("zls-stderr")?.append(line);
             scrollOutputToEnd();
         } else {
-            console.debug("LSP <<-", ev.data);
+            console.debug("LSP <<-", data);
         }
-        this.handleMessage(ev.data);
+        this.handleMessage(data);
     };
 
     public async sendMessage(message: JsonRpcMessage): Promise<void> {
         console.debug("LSP ->>", message);
         if (this.worker) {
-            const str = JSON.stringify(message);
-
-            const final = `Content-Length: ${str.length}\r\n\r\n${str}`;
-
-            this.sharer.lock();
-
-            const encoded = new TextEncoder().encode(final);
-            new Uint8Array(this.sharer.dataBuffer).set(encoded, this.sharer.index);
-            this.sharer.index += encoded.byteLength;
-
-            this.sharer.unlock();
-
-            Atomics.store(new Int32Array(this.sharer.stdinBlockBuffer), 0, 1);
-            Atomics.notify(new Int32Array(this.sharer.stdinBlockBuffer), 0);
+            this.worker.postMessage(JSON.stringify(message));
         }
     }
 
@@ -121,14 +93,11 @@ let client = new ZlsClient(new ZLSWorker());
 let editor = (async () => {
     await client.initialize();
 
-    console.log(getPasteHash());
-
     let editor = new EditorView({
         extensions: [],
         parent: document.getElementById("editor")!,
         state: EditorState.create({
-            doc:
-    (await getPaste()) ?? `const std = @import("std");
+            doc: `const std = @import("std");
 
 pub fn main() !void {
     std.debug.print("All your {s} are belong to us.\\n", .{"codebase"});
@@ -205,50 +174,4 @@ outputs_run.addEventListener("click", async () => {
 
     outputs_tab_selector.value = "zig-stderr";
     changeTab("zig-stderr");
-});
-
-const outputs_share = document.getElementById("outputs-share")! as HTMLButtonElement;
-
-outputs_share.addEventListener("click", async () => {
-    const response = await fetch(`${endpoint}/put`, {
-        method: "put",
-        headers: {
-            "Content-Type": "application/octet-stream"
-        },
-        body: (await editor).state.doc.toString(),
-    });
-
-    const hash = (await response.text()).slice(0, 6);
-    history.pushState(null, "", `/${hash}`);
-
-    (document.getElementById("popup-input")! as HTMLInputElement).value = `https://playground.zigtools.org/${hash}`;
-    document.getElementById("popup")?.classList.add("shown");
-});
-
-const endpoint = process.env.NODE_ENV === "development" ? "http://localhost:3000" : "https://pastes.zigtools.org";
-
-async function getPaste(): Promise<string | null> {
-    const hash = getPasteHash();
-    if (!hash) return null;
-    const f = await fetch(`${endpoint}/get${hash.length === 64 ? "Exact" : ""}/${hash}`);
-    if (f.status !== 200) return null;
-    return await f.text();
-}
-
-function getPasteHash(): string | null {
-    const maybeHash = location.pathname.replace("/", "");
-    if (maybeHash.length === 6 || maybeHash.length === 64) return maybeHash;
-    return null;
-}
-
-document.getElementById("popup-copy")?.addEventListener("click", () => {
-    var c = document.getElementById("popup-input") as HTMLInputElement;
-    c.select();
-    document.execCommand("copy");
-
-    document.getElementById("popup-copy")!.innerHTML = "Copied!"
-});
-
-document.getElementById("popup-close")?.addEventListener("click", () => {
-    document.getElementById("popup")?.classList.remove("shown");
 });

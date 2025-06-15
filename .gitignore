@@ -3,3 +3,5 @@ dist
 .parcel-cache
 .env
 repos
+.zig-cache
+zig-out
