@@ -4,7 +4,7 @@ import { EditorView, basicSetup } from "codemirror"
 import { JsonRpcMessage, LspClient } from "./lsp";
 import { indentWithTab } from "@codemirror/commands";
 import { indentUnit } from "@codemirror/language";
-import { oneDark } from "@codemirror/theme-one-dark";
+import { editorTheme } from "./theme.ts";
 // @ts-ignore
 import ZLSWorker from './workers/zls.ts?worker';
 // @ts-ignore
@@ -105,7 +105,7 @@ pub fn main() !void {
     try std.io.getStdOut().writer().writeAll("bruh");
 }
 `,
-            extensions: [basicSetup, oneDark, indentUnit.of("    "), client.createPlugin("file:///main.zig", "zig", true), keymap.of([indentWithTab]),],
+            extensions: [basicSetup, editorTheme, indentUnit.of("    "), client.createPlugin("file:///main.zig", "zig", true), keymap.of([indentWithTab]),],
         }),
     });
 

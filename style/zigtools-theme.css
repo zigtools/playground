@@ -1,0 +1,105 @@
+:root {
+  --code-background-color: white;
+  --code-text-color: #314750;
+}
+
+.st-comment {
+  color: hsl(270, 10%, 40%);
+}
+.st-keyword {
+  color: hsl(300, 55%, 45%);
+}
+.st-number, .st-keywordLiteral {
+  color: hsl(35, 80%, 34%);
+}
+.st-string {
+  color: hsl(100, 50%, 33%);
+}
+.st-operator {
+  color: hsl(215, 40%, 48%);
+}
+.st-escapeSequence {
+  color: hsl(215, 40%, 48%);
+}
+.st-label {
+  color: hsl(350, 100%, 20%);
+}
+.st-builtin {
+  color: hsl(15, 100%, 43%);
+}
+.st-parameter,
+.st-enumMember,
+.st-errorTag {
+  font-style: italic;
+}
+.st-type,
+.st-typeParameter,
+.st-enum,
+.st-class,
+.st-struct {
+  color: hsl(215, 70%, 48%);
+}
+.st-property {
+  color: hsl(180, 50%, 32%);
+}
+.st-function,
+.st-method {
+  color: hsl(45, 70%, 33%);
+}
+.st-method {
+  font-style: italic;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --code-background-color: #121212;
+    --code-text-color: #c8c8c8;
+  }
+
+  .st-comment {
+    color: hsl(270, 10%, 55%);
+  }
+  .st-keyword {
+    color: hsl(300, 50%, 65%);
+  }
+  .st-number, .st-keywordLiteral {
+    color: hsl(20, 70%, 60%);
+  }
+  .st-string {
+    color: hsl(100, 40%, 55%);
+  }
+  .st-operator {
+    color: hsl(215, 40%, 55%);
+  }
+  .st-escapeSequence {
+    color: hsl(215, 40%, 55%);
+  }
+  .st-label {
+    color: hsl(350, 90%, 85%);
+  }
+  .st-builtin {
+    color: hsl(35, 70%, 50%);
+  }
+  .st-parameter,
+  .st-enumMember,
+  .st-errorTag {
+    font-style: italic;
+  }
+  .st-type,
+  .st-typeParameter,
+  .st-enum,
+  .st-class,
+  .st-struct {
+    color: hsl(215, 70%, 65%);
+  }
+  .st-property {
+    color: hsl(180, 50%, 50%);
+  }
+  .st-function,
+  .st-method {
+    color: hsl(45, 80%, 70%);
+  }
+  .st-method {
+    font-style: italic;
+  }
+}

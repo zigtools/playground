@@ -17,10 +17,8 @@ import type { PublishDiagnosticsParams } from 'vscode-languageserver-protocol';
 import type { ViewUpdate, PluginValue } from '@codemirror/view';
 import { Text } from '@codemirror/state';
 import type * as LSP from 'vscode-languageserver-protocol';
-import {SemanticTokenTypes} from 'vscode-languageserver-protocol';
-import { foldService, highlightingFor } from "@codemirror/language";
-import { tags } from "@lezer/highlight";
-import { Tag } from "@lezer/highlight";
+import { SemanticTokenTypes } from 'vscode-languageserver-protocol';
+import { foldService } from "@codemirror/language";
 
 const CompletionItemKindMap = Object.fromEntries(
     Object.entries(CompletionItemKind).map(([key, value]) => [value, key])
@@ -93,6 +91,7 @@ export abstract class LspClient {
                         tokenTypes: Object.values(SemanticTokenTypes),
                         tokenModifiers: [],
 	                    formats: ["relative"],
+                        overlappingTokenSupport: true,
                     },
                     hover: {
                         dynamicRegistration: true,
@@ -418,6 +417,9 @@ class LspPlugin implements PluginValue {
 
         if (!semanticTokens) return console.log("No semantic tokens!");
 
+        const tokenTypes = this.client.capabilities.semanticTokensProvider.legend.tokenTypes;
+        const tokenModifiers = this.client.capabilities.semanticTokensProvider.legend.tokenModifiers;
+
         let builder = new RangeSetBuilder<Decoration>();
 
         let line = 0;
@@ -429,7 +431,7 @@ class LspPlugin implements PluginValue {
             const deltaStartChar = data[i + 1];
             const length = data[i + 2];
             const tokenType = data[i + 3];
-            const tokenModifiers = data[i + 4];
+            const tokenModifierBitSet = data[i + 4];
 
             line += deltaLine;
             if (deltaLine == 0) { // same line
@@ -438,98 +440,24 @@ class LspPlugin implements PluginValue {
                 col = deltaStartChar;
             }
             
+            let className = `st-${tokenTypes[tokenType]}`;
+
+            {
+                let value = tokenModifierBitSet;
+                let index = 0;
+                while (value != 0) {
+                    if (value & 1) {
+                        className += ` sm-${tokenModifiers[index]}`;
+                    }
+                    value = value >> 1;
+                    index += 1;
+                }
+            }
+
             const l = this.view.state.doc.line(line + 1).from;
-            const decodedTokenType = this.client.capabilities.semanticTokensProvider?.legend.tokenTypes[tokenType];
-            let codeMirrorTag: Tag | null = null;
-
-            // TODO: Improve these mappings
-            switch (decodedTokenType) {
-                case "namespace":
-                    codeMirrorTag = tags.namespace;
-                    break;
-                case "type":
-                    codeMirrorTag = tags.typeName;
-                    break;
-                case "class":
-                    codeMirrorTag = tags.className;
-                    break;
-                case "enum":
-                    codeMirrorTag = tags.className;
-                    break;
-                case "interface":
-                    codeMirrorTag = tags.className;
-                    break;
-                case "struct":
-                    codeMirrorTag = tags.className;
-                    break;
-                case "typeParameter":
-                    codeMirrorTag = tags.name;
-                    break;
-                case "parameter":
-                    codeMirrorTag = tags.name;
-                    break;
-                case "variable":
-                    codeMirrorTag = tags.variableName;
-                    break;
-                case "property":
-                    codeMirrorTag = tags.propertyName;
-                    break;
-                case "enumMember":
-                    codeMirrorTag = tags.propertyName;
-                    break;
-                case "event":
-                    codeMirrorTag = tags.emphasis;
-                    break;
-                case "function":
-                    codeMirrorTag = tags.function(tags.variableName);
-                    break;
-                case "method":
-                    codeMirrorTag = tags.function(tags.variableName);
-                    break;
-                case "macro":
-                    codeMirrorTag = tags.macroName;
-                    break;
-                case "keyword":
-                    codeMirrorTag = tags.keyword;
-                    break;
-                case "modifier":
-                    codeMirrorTag = tags.modifier;
-                    break;
-                case "comment":
-                    codeMirrorTag = tags.comment;
-                    break;
-                case "string":
-                    codeMirrorTag = tags.string;
-                    break;
-                case "number":
-                    codeMirrorTag = tags.number;
-                    break;
-                case "regexp":
-                    codeMirrorTag = tags.regexp;
-                    break;
-                case "operator":
-                    codeMirrorTag = tags.operator;
-                    break;
-                case "decorator":
-                    codeMirrorTag = tags.modifier;
-                    break;
-
-                case "builtin":
-                    codeMirrorTag = tags.special(tags.variableName);
-                    break;
-                case "keywordLiteral":
-                    codeMirrorTag = tags.special(tags.literal);
-                    break;
-
-                default:
-                    break;
-            }
-
-            if (codeMirrorTag) {
-                builder.add(l + col, l + col + length, Decoration.mark({
-                    class: highlightingFor(this.view.state, [codeMirrorTag]) ?? undefined,
-                }));
-            }
+            builder.add(l + col, l + col + length, Decoration.mark({
+                class: className,
+            }));
         }
         this.decorations = builder.finish()
     }
