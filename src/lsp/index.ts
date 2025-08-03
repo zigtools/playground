@@ -1,6 +1,6 @@
 import { autocompletion } from "@codemirror/autocomplete";
 import { setDiagnostics } from "@codemirror/lint";
-import { ChangeSpec, Facet, Prec, RangeSetBuilder } from "@codemirror/state";
+import { ChangeSpec, Facet, Prec, RangeSetBuilder, StateEffect, StateField } from "@codemirror/state";
 import { EditorView, ViewPlugin, Tooltip, hoverTooltip, keymap, DecorationSet, Decoration } from '@codemirror/view';
 import {
     DiagnosticSeverity,
@@ -45,6 +45,8 @@ export type JsonRpcMessage = {
     result?: any,
     error?: any,
 };
+
+const setDecorations = StateEffect.define<DecorationSet>({});
 
 export abstract class LspClient {
     public id: number;
@@ -262,13 +264,25 @@ export abstract class LspClient {
     public createPlugin(docUri: string, langId: string, allowHtmlContent: boolean) {
         let plugin: LspPlugin | null = null;
 
+        const decorations = StateField.define<DecorationSet>({
+            create() {
+                return Decoration.none;
+            },
+            update(decorations, tr) {
+                for (let e of tr.effects) if (e.is(setDecorations)) {
+                    decorations = e.value;
+                }
+                return decorations;
+            },
+            provide: f => EditorView.decorations.from(f)
+        });
+
         return [
             client.of(this),
             documentUri.of(docUri),
             languageId.of(langId),
-            ViewPlugin.define((view) => (plugin = new LspPlugin(view, allowHtmlContent)), {
-                decorations: v => v.decorations,
-            }),
+            decorations.extension,
+            ViewPlugin.define((view) => (plugin = new LspPlugin(view, allowHtmlContent)), {}),
             hoverTooltip(
                 (view, pos) => plugin?.requestHoverTooltip(
                     view,
@@ -362,14 +376,16 @@ class LspPlugin implements PluginValue {
         });
     }
 
-    async update({ docChanged }: ViewUpdate) {
-        if (!docChanged) return;
+    update(update: ViewUpdate) {
+        if (!update.docChanged) return;
         this.foldingRangeMap.clear();
-        await this.sendChange({
-            documentText: this.view.state.doc.toString(),
-        });
-        await this.updateDecorations();
-        await this.updateFoldingRanges();
+        (async () => {
+            await this.sendChange({
+                documentText: this.view.state.doc.toString(),
+            });
+            await this.updateDecorations();
+            await this.updateFoldingRanges();
+        })();
     }
 
     destroy() {
@@ -377,7 +393,7 @@ class LspPlugin implements PluginValue {
     }
 
     async initialize({ documentText }: { documentText: string }) {
-         if (this.client.initializePromise) {
+        if (this.client.initializePromise) {
             await this.client.initializePromise;
         }
         this.client.textDocumentDidOpen({
@@ -388,6 +404,8 @@ class LspPlugin implements PluginValue {
                 version: this.documentVersion,
             }
         });
+        await this.updateDecorations();
+        await this.updateFoldingRanges();
     }
 
     async sendChange({ documentText }: { documentText: string }) {
@@ -417,8 +435,8 @@ class LspPlugin implements PluginValue {
 
         if (!semanticTokens) return console.log("No semantic tokens!");
 
-        const tokenTypes = this.client.capabilities.semanticTokensProvider.legend.tokenTypes;
-        const tokenModifiers = this.client.capabilities.semanticTokensProvider.legend.tokenModifiers;
+        const tokenTypes = this.client.capabilities.semanticTokensProvider!.legend.tokenTypes;
+        const tokenModifiers = this.client.capabilities.semanticTokensProvider!.legend.tokenModifiers;
 
         let builder = new RangeSetBuilder<Decoration>();
 
@@ -460,6 +478,7 @@ class LspPlugin implements PluginValue {
             }));
         }
         this.decorations = builder.finish()
+        this.view.dispatch({effects: [setDecorations.of(this.decorations)]});
     }
 
     public async updateFoldingRanges(): Promise<void> {
