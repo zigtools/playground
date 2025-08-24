@@ -159,7 +159,7 @@ resizeBar.addEventListener("mousedown", event => {
 });
 window.addEventListener("mousemove", event => {
     if (resizing) {
-        const percent = clamp(event.clientY / window.innerHeight * 100, 40, 100);
+        const percent = clamp(event.clientY / splitPane.getBoundingClientRect().height * 100, 40, 100);
         splitPane.style.setProperty("--editor-height-percent", `${percent}%`);
     }
 });
