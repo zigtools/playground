@@ -25,50 +25,29 @@ export default class ZlsClient extends LspClient {
     private messageHandler = (ev: MessageEvent) => {
         const data = JSON.parse(ev.data);
 
-        if (data.method == "window/logMessage" || data.stderr) {
-            let logLevel = "[?????] ";
-            let color = "white";
+        if (data.method == "window/logMessage") {
             if (!data.stderr) {
                 switch (data.params.type) {
                     case 5:
-                        logLevel = "[DEBUG] ";
-                        color = "white";
+                        console.debug("ZLS --- " , data.params.message);
                         break;
                     case 4:
-                        logLevel = "[LOG  ] ";
-                        color = "paleturquoise";
+                        console.log("ZLS --- " , data.params.message);
                         break;
                     case 3:
-                        logLevel = "[INFO ] ";
-                        color = "lightblue";
+                        console.info("ZLS --- " , data.params.message);
                         break;
                     case 2:
-                        logLevel = "[WARN ] ";
-                        color = "darkorange";
+                        console.warn("ZLS --- " , data.params.message);
                         break;
                     case 1:
-                        logLevel = "[ERROR] ";
-                        color = "crimson";
+                        console.error("ZLS --- " , data.params.message);
                         break;
                     default:
+                        console.error(data.params.message);
                         break;
                 }
             }
-
-            const line = document.createElement('div');
-            line.style.color = color;
-
-            const logLevelSpan = document.createElement('span');
-            logLevelSpan.textContent = logLevel;
-
-            const logTextSpan = document.createElement('span');
-            logTextSpan.textContent = data.stderr ? data.stderr : data.params.message;
-
-            line.appendChild(logLevelSpan);
-            line.appendChild(logTextSpan);
-
-            document.getElementById("zls-stderr")?.append(line);
-            scrollOutputToEnd();
         } else {
             console.debug("LSP <<-", data);
         }
