@@ -11,6 +11,8 @@ import ZLSWorker from './workers/zls.ts?worker';
 import ZigWorker from './workers/zig.ts?worker';
 // @ts-ignore
 import RunnerWorker from './workers/runner.ts?worker';
+// @ts-ignore
+import zigMainSource from './main.zig?raw';
 
 export default class ZlsClient extends LspClient {
     public worker: Worker;
@@ -76,14 +78,7 @@ let editor = (async () => {
         extensions: [],
         parent: document.getElementById("editor")!,
         state: EditorState.create({
-            doc: `const std = @import("std");
-
-pub fn main() !void {
-    std.debug.print("All your {s} are belong to us.\\n", .{"codebase"});
-
-    try std.io.getStdOut().writer().writeAll("bruh");
-}
-`,
+            doc: zigMainSource,
             extensions: [basicSetup, editorTheme, indentUnit.of("    "), client.createPlugin("file:///main.zig", "zig", true), keymap.of([indentWithTab]),],
         }),
     });
