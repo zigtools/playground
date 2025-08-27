@@ -1,6 +1,5 @@
 const std = @import("std");
 const zls = @import("zls");
-const AnyTransport = zls.lsp.AnyTransport;
 
 const allocator = std.heap.wasm_allocator;
 
@@ -28,50 +27,39 @@ fn logFn(
         .debug => .Debug,
     };
     const json_message = zls.lsp.bufPrintLogMessage(&buffer, lsp_message_type, format, args);
-    WasmTransport.any().writeJsonMessage(json_message) catch {};
+    transport.writeJsonMessage(json_message) catch {};
 }
 
-const WasmTransport = struct {
-    pub fn any() AnyTransport {
-        return .{ .impl = .{
-            .transport = undefined,
-            .readJsonMessage = @ptrCast(&readJsonMessage),
-            .writeJsonMessage = @ptrCast(&writeJsonMessage),
-        } };
-    }
-
-    pub fn readJsonMessage(
-        _: *anyopaque,
-        _: std.mem.Allocator,
-    ) (std.mem.Allocator.Error || AnyTransport.ReadError)![]u8 {
-        unreachable;
-    }
-
-    pub fn writeJsonMessage(
-        _: *anyopaque,
-        json_message: []const u8,
-    ) AnyTransport.WriteError!void {
-        output_message_starts.append(
-            allocator,
-            output_message_bytes.items.len,
-        ) catch return error.NoSpaceLeft;
-        output_message_bytes.appendSlice(
-            allocator,
-            json_message,
-        ) catch return error.NoSpaceLeft;
-    }
+var transport: zls.lsp.Transport = .{
+    .vtable = &.{
+        .readJsonMessage = readJsonMessage,
+        .writeJsonMessage = writeJsonMessage,
+    },
 };
+
+fn readJsonMessage(_: *zls.lsp.Transport, _: std.mem.Allocator) (std.mem.Allocator.Error || zls.lsp.Transport.ReadError)![]u8 {
+    unreachable;
+}
+
+fn writeJsonMessage(_: *zls.lsp.Transport, json_message: []const u8) zls.lsp.Transport.WriteError!void {
+    output_message_starts.append(allocator, output_message_bytes.items.len) catch return error.NoSpaceLeft;
+    output_message_bytes.appendSlice(allocator, json_message) catch return error.NoSpaceLeft;
+}
 
 var server: *zls.Server = undefined;
 
-var input_bytes: std.ArrayListUnmanaged(u8) = .empty;
+var input_bytes: std.ArrayList(u8) = .empty;
 
-var output_message_starts: std.ArrayListUnmanaged(usize) = .empty;
-var output_message_bytes: std.ArrayListUnmanaged(u8) = .empty;
+var output_message_starts: std.ArrayList(usize) = .empty;
+var output_message_bytes: std.ArrayList(u8) = .empty;
 
 export fn createServer() void {
-    server = zls.Server.create(allocator) catch @panic("server creation failed");
-    server.setTransport(WasmTransport.any());
+    server = zls.Server.create(.{
+        .allocator = allocator,
+        .transport = null,
+        .config = null,
+    }) catch @panic("server creation failed");
+    server.setTransport(&transport);
 }
 
 export fn allocMessage(len: usize) [*]const u8 {

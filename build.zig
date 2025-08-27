@@ -7,7 +7,7 @@ pub fn build(b: *std.Build) void {
     const zls = b.dependency("zls", .{
         .target = target,
         .optimize = optimize,
-        .@"version-string" = @as([]const u8, "0.14.0-dev"),
+        // .@"version-string" = @as([]const u8, "0.16.0-dev"),
     }).module("zls");
 
     const exe = b.addExecutable(.{
