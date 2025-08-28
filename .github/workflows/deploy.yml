@@ -26,8 +26,8 @@ jobs:
 
       - name: Install binaryen
         run: |
-          apt-get update
-          apt-get install binaryen
+          sudo apt-get update
+          sudo apt-get install binaryen
 
       - run: |
           zig build -Drelease -Dwasm-opt
