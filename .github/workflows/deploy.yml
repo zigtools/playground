@@ -21,9 +21,17 @@ jobs:
         with:
           node-version: 22
 
+      - uses: mlugg/setup-zig@v2
+
+      - name: Install binaryen
+        run: |
+          apt-get update
+          apt-get install binaryen
+
       - run: |
+          zig build -Drelease -Dwasm-opt
           npm ci
-          npx parcel build 404.html
+          npx run build
 
       - uses: actions/upload-pages-artifact@v3
         with:

@@ -1,7 +1,7 @@
 import { WASI, PreopenDirectory, Fd, ConsoleStdout } from "@bjorn3/browser_wasi_shim";
 import { getLatestZigArchive } from "../utils";
 // @ts-ignore
-import zlsWasm from "../../zig-out/bin/zls-playground.wasm?url";
+import zlsWasm from "../../zig-out/bin/zls.wasm?url";
 
 class Stdio extends Fd {
     constructor() {

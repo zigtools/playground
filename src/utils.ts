@@ -1,5 +1,5 @@
 // @ts-ignore
-import zigTarGz from "./zig.tar.gz?inline";
+import zigTarGz from "../zig-out/zig.tar.gz?inline";
 import { untar } from "@andrewbranch/untar.js";
 import { Directory, File } from "@bjorn3/browser_wasi_shim";
 

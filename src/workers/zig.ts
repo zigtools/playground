@@ -1,7 +1,7 @@
 import { WASI, PreopenDirectory, Fd, File, ConsoleStdout, OpenFile, Inode } from "@bjorn3/browser_wasi_shim";
 import { getLatestZigArchive } from "../utils";
 // @ts-ignore
-import zlsWasm from "../zig.wasm?url";
+import zigWasm from "../../zig-out/bin/zig.wasm?url";
 
 function stderrOutput(): ConsoleStdout {
     const dec = new TextDecoder("utf-8", { fatal: false });
@@ -43,7 +43,7 @@ async function run(source: string) {
     ] satisfies Fd[];
     let wasi = new WASI(args, env, fds, { debug: false });
 
-    const { instance } = await WebAssembly.instantiateStreaming(fetch(zlsWasm), {
+    const { instance } = await WebAssembly.instantiateStreaming(fetch(zigWasm), {
         "wasi_snapshot_preview1": wasi.wasiImport,
     });
 
