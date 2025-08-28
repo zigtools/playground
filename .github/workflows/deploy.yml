@@ -39,3 +39,4 @@ jobs:
           path: "dist/"
 
       - uses: actions/deploy-pages@v4
+        if: github.ref == 'refs/heads/main'
