@@ -32,7 +32,7 @@ jobs:
       - run: |
           zig build -Drelease -Dwasm-opt
           npm ci
-          npx run build
+          npm run build
 
       - uses: actions/upload-pages-artifact@v3
         with:
