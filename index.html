@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zig+ZLS Playground</title>
+
+    <link rel="stylesheet" href="style/style.css">
+</head>
+<body>
+    <button id="run">Run</button>
+
+    <main>
+        <div id="split-pane" style="--editor-height-percent: 100%;">
+            <div id="editor"></div>
+            <div id="resize-bar"></div>
+            <div id="output"></div>
+        </div>
+    </main>
+
+    <footer>
+        <h1><a href="https://playground.zigtools.org">playground</a></h1>
+        <span><span id="warning">Warning</span> Zig's self-hosted WebAssembly backend is still experimental!</span>
+        <span>A <a href="https://zigtools.org">zigtools</a> initiative.</span>
+    </footer>
+
+    <script src="/src/editor.ts" type="module"></script>
+</body>
+</html>

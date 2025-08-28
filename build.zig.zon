@@ -1,0 +1,17 @@
+.{
+    .name = .playground,
+    .version = "0.0.0",
+    .fingerprint = 0xdc188848360fd988, // Changing this has security and trust implications.
+    .minimum_zig_version = "0.15.1",
+    .dependencies = .{
+        .zls = .{
+            .url = "git+https://github.com/zigtools/zls?ref=0.15.0#ce6c8f02c78e622421cfc2405c67c5222819ec03",
+            .hash = "zls-0.15.0-rmm5fkjqIwDZpmDHyKwxa9K2gcI3FPaGVFPwjYWFBM5B",
+        },
+        .zig = .{
+            .url = "git+https://github.com/zigtools/zig?ref=wasm32-wasi#c019ad27607ad9a78b8fe62a482e2cd3e59c862a",
+            .hash = "zig-0.0.0-Fp4XJPL7IQ0pokn0NhKHKeNpXS-bMHUs0fi_q1yJHX5G",
+        },
+    },
+    .paths = .{""},
+}

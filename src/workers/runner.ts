@@ -2,13 +2,20 @@
 
 import { WASI, PreopenDirectory, OpenFile, File, ConsoleStdout } from "@bjorn3/browser_wasi_shim";
 
+function stderrOutput(): ConsoleStdout {
+    const dec = new TextDecoder("utf-8", { fatal: false });
+    return new ConsoleStdout((buffer) => {
+        postMessage({ stderr: dec.decode(buffer, { stream: true }) });
+    });
+}
+
 async function run(wasmData: Uint8Array) {
     let args = ["main.wasm"];
     let env = [];
     let fds = [
         new OpenFile(new File([])), // stdin
-        ConsoleStdout.lineBuffered((line) => postMessage({ stderr: line })), // stdout
-        ConsoleStdout.lineBuffered((line) => postMessage({ stderr: line })), // stderr
+        stderrOutput(), // stdout
+        stderrOutput(), // stderr
         new PreopenDirectory(".", new Map([])),
     ];
     let wasi = new WASI(args, env, fds);

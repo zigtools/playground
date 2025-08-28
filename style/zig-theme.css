@@ -1,0 +1,83 @@
+:root {
+  --code-background-color: #f8f8f8;
+  --code-text-color: black;
+}
+
+.st-comment {
+  color: #aa7;
+}
+.st-keyword {
+  color: #333;
+  font-weight: bold;
+}
+.st-number, .st-keywordLiteral {
+  color: #008080;
+}
+.st-string {
+  color: #d14;
+}
+.st-escapeSequence {
+  color: hsl(57, 90%, 25%); /* TODO */
+}
+.st-label {
+  font-style: italic;
+}
+.st-builtin {
+  color: #0086b3;
+}
+.st-parameter {
+  font-style: italic;
+}
+.st-type,
+.st-typeParameter,
+.st-enum,
+.st-class,
+.st-struct {
+  color: #458;
+  font-weight: bold;
+}
+.st-function,
+.st-method {
+  color: #900;
+  font-weight: bold;
+}
+.st-method {
+  font-style: italic;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --code-background-color: #1e1e1e;
+    --code-text-color: #ccc;
+  }
+
+  .st-comment {
+    color: #aa7;
+  }
+  .st-keyword {
+    color: #ccc;
+  }
+  .st-number, .st-keywordLiteral {
+    color: #ff8080;
+  }
+  .st-string {
+    color: #2e5;
+  }
+  .st-escapeSequence {
+    color: #5ee;
+  }
+  .st-builtin {
+    color: #ff894c;
+  }
+  .st-type,
+  .st-typeParameter,
+  .st-enum,
+  .st-class,
+  .st-struct {
+    color: #68f;
+  }
+  .st-function,
+  .st-method {
+    color: #b1a0f8;
+  }
+}

@@ -3,6 +3,7 @@ name: Deploy
 on:
   push:
     branches: ["main"]
+  pull_request:
   workflow_dispatch:
 
 permissions:
@@ -21,9 +22,17 @@ jobs:
         with:
           node-version: 22
 
+      - uses: mlugg/setup-zig@v2
+
+      - name: Install binaryen
+        run: |
+          sudo apt-get update
+          sudo apt-get install binaryen
+
       - run: |
+          zig build -Drelease -Dwasm-opt
           npm ci
-          npx parcel build 404.html
+          npm run build
 
       - uses: actions/upload-pages-artifact@v3
         with:

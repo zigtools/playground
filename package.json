@@ -1,8 +1,10 @@
 {
   "name": "playground",
+  "type": "module",
   "scripts": {
-    "bundle": "node_modules\\.bin\\rollup editor.mjs -f iife -o editor.bundle.js -p @rollup\\plugin-node-resolve",
-    "serve": "parcel 404.html"
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
   },
   "dependencies": {
     "@andrewbranch/untar.js": "^1.0.3",
@@ -12,17 +14,13 @@
     "@codemirror/language": "^6.6.0",
     "@codemirror/lint": "^6.2.0",
     "@codemirror/state": "^6.2.0",
-    "@codemirror/theme-one-dark": "^6.1.1",
-    "@codemirror/tooltip": "^0.19.16",
     "@codemirror/view": "^6.9.3",
-    "@lezer/highlight": "^1.1.4",
     "codemirror": "^6.0.1",
     "vscode-languageserver-protocol": "^3.17.3"
   },
   "devDependencies": {
-    "@parcel/transformer-sass": "^2.8.3",
-    "@types/node": "^18.15.11",
-    "parcel": "^2.8.3"
+    "typescript": "~5.7.2",
+    "vite": "^6.3.1"
   },
   "browserslist": [
     "since 2017-06"

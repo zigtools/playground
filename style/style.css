@@ -1,0 +1,239 @@
+@import "reset.css";
+@import "zig-theme.css";
+
+:root {
+    --background: hsl(0, 0%, 10%);
+    --button-background: hsl(40, 75%, 40%);
+    --output-background: hsl(0, 0%, 90%);
+    --footer-background: hsl(0, 0%, 95%);
+    --footer-text: black;
+    --output-text: black;
+    --resizer-color: hsl(0, 0%, 80%);
+
+    --output-zig-background: hsl(37, 20%, 25%);
+    --output-zig-latest-background: hsl(37, 40%, 80%);
+    --output-runner-background: hsl(200, 15%, 25%);
+    --output-runner-latest-background: hsl(200, 30%, 80%);
+
+    --tooltip-background: hsl(0, 0%, 100%);
+    --tooltip-text: hsl(0, 0%, 0%);
+
+    --button-text: white;
+    --link-text: hsl(200, 100%, 60%);
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --output-background: hsl(0, 0%, 5%);
+        --button-background: hsl(40, 75%, 25%);
+        --footer-background: hsl(0, 0%, 10%);
+        --footer-text: hsl(0, 0%, 80%);
+        --output-text: hsl(0, 0%, 90%);
+        --resizer-color: hsl(0, 0%, 50%);
+
+        --output-zig-background: hsl(37, 93%, 5%);
+        --output-zig-latest-background: hsl(37, 93%, 10%);
+        --output-runner-background: hsl(200, 93%, 5%);
+        --output-runner-latest-background: hsl(200, 93%, 10%);
+
+        --tooltip-background: hsl(0, 0%, 0%);
+        --tooltip-text: hsl(0, 0%, 100%);
+    }
+}
+
+body, button {
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html, body {
+    margin: 0;
+    padding: 0;
+    
+    background-color: var(--background);
+    font-size: 13pt;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+main {
+    height: 100%;
+
+    flex-grow: 1;
+
+    height: calc(100% - 80px);
+}
+
+footer {
+    display: flex;
+    padding: 0.5rem;
+    text-align: center;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.85em;
+    line-height: 1.25;
+    background-color: var(--footer-background);
+    color: var(--footer-text);
+
+    &>h1 {
+        font-size: 1em;
+        font-weight: 900;
+        letter-spacing: -1px;
+    
+        &>a {
+            color: #f7a41d;
+            text-decoration: none;
+        }
+    }
+
+    #warning {
+        margin-right: 0.25rem;
+        border-radius: 3px;
+        padding: 0.075rem 0.30rem;
+        background-color: var(--button-background);
+        color: var(--button-text);
+    }
+}
+
+p {
+    margin: 1rem 0;
+}
+
+strong {
+    font-weight: 700;
+}
+
+i {
+    font-style: italic;
+}
+
+a {
+    color: var(--link-text);
+    text-decoration: underline;
+}
+
+#split-pane {
+    display: flex;
+
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+
+    &>*:first-child {
+        height: var(--editor-height-percent);
+    }
+
+    &>#resize-bar {
+        height: 0.5rem;
+    }
+
+    &>*:last-child {
+        height: calc(100% - 0.5rem - var(--editor-height-percent));
+    }
+}
+
+#resize-bar {
+    position: relative;
+    width: 100%;
+    cursor: row-resize;
+    background-color: hsl(0, 0%, 15%);
+}
+
+#resize-bar::before {
+    content: "";
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    transform: scale(3);
+}
+
+#resize-bar::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 5rem;
+    border: 2px dashed var(--resizer-color);
+    border-radius: 100px;
+    transform: translate(-50%,-50%);
+}
+
+code {
+    font-family: monospace;
+}
+
+.cm-editor {
+    height: 100%;
+}
+
+.cm-focused {
+    outline: none !important;
+}
+
+.cm-tooltip {
+    padding: 6px;
+}
+
+ul {
+    list-style: circle;
+    margin-left: 2rem;
+    line-height: 1.5;
+}
+
+#run {
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    z-index: 1;
+    border: none;
+    border-radius: 3px;
+    padding: 0.5rem 1.85rem;
+    font-size: 1em;
+    font-weight: 700;
+    cursor: pointer;
+    background-color: var(--button-background);
+    color: var(--button-text);
+}
+
+#output {
+    height: 100%;
+    overflow-y: auto;
+    background-color: var(--output-background);
+    color: var(--output-text);
+
+    &>div {
+        white-space: pre;
+        font-family: monospace;
+    }
+
+    &>.zig-output {
+        padding: 1rem;
+        background-color: var(--output-zig-background);
+    
+        &.latest {
+            background-color: var(--output-zig-latest-background);
+        }
+    }
+
+    &>.runner-output {
+        padding: 1rem;
+        background-color: var(--output-runner-background);
+    
+        &.latest {
+            background-color: var(--output-runner-latest-background);
+        }
+    }
+
+    &>.output-split {
+        width: 100%;
+        height: 1px;
+        background-color: white;
+    }
+}
