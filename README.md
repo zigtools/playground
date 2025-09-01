@@ -1,15 +1,15 @@
 # Zigtools Playground
 
-Works pretty well in a bunch of browsers, but note the required security headers.
+Run and explore Zig in your browser, with compiler and LSP support built in.
 
-## Installing
+## Installation
 
 You can either:
 
 - Use it online: https://playground.zigtools.org/
 - Run it locally:
 
-Requires Zig `0.15.1`.
+Requires Zig `0.15.1`. Will automatically fetch Zig along with ZLS, compiling both for webassembly.
 
 ```bash
 zig build
