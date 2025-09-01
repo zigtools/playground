@@ -31,19 +31,19 @@ export default class ZlsClient extends LspClient {
             if (!data.stderr) {
                 switch (data.params.type) {
                     case 5:
-                        console.debug("ZLS --- " , data.params.message);
+                        console.debug("ZLS --- ", data.params.message);
                         break;
                     case 4:
-                        console.log("ZLS --- " , data.params.message);
+                        console.log("ZLS --- ", data.params.message);
                         break;
                     case 3:
-                        console.info("ZLS --- " , data.params.message);
+                        console.info("ZLS --- ", data.params.message);
                         break;
                     case 2:
-                        console.warn("ZLS --- " , data.params.message);
+                        console.warn("ZLS --- ", data.params.message);
                         break;
                     case 1:
-                        console.error("ZLS --- " , data.params.message);
+                        console.error("ZLS --- ", data.params.message);
                         break;
                     default:
                         console.error(data.params.message);
@@ -90,9 +90,13 @@ let editor = (async () => {
     return editor;
 })();
 
-function scrollOutputToEnd() {
+function revealOutputWindow() {
     const outputs = document.getElementById("output")!;
     outputs.scrollTo(0, outputs.scrollHeight!);
+    const editorHeightPercent = parseFloat(splitPane.style.getPropertyValue("--editor-height-percent"));
+    if (editorHeightPercent == 100) {
+        splitPane.style.setProperty("--editor-height-percent", `${resizeBarPreviousSize}%`);
+    }
 }
 
 let zigWorker = new ZigWorker();
@@ -100,7 +104,7 @@ let zigWorker = new ZigWorker();
 zigWorker.onmessage = ev => {
     if (ev.data.stderr) {
         document.querySelector(".zig-output:last-child")!.textContent += ev.data.stderr;
-        scrollOutputToEnd();
+        revealOutputWindow();
         return;
     } else if (ev.data.failed) {
         const outputSplit = document.createElement("div");
@@ -113,13 +117,13 @@ zigWorker.onmessage = ev => {
         zigOutput.classList.add("runner-output");
         zigOutput.classList.add("latest");
         document.getElementById("output")!.appendChild(zigOutput);
-        
-        runnerWorker.postMessage({run: ev.data.compiled});
+
+        runnerWorker.postMessage({ run: ev.data.compiled });
 
         runnerWorker.onmessage = rev => {
             if (rev.data.stderr) {
                 document.querySelector(".runner-output:last-child")!.textContent += rev.data.stderr;
-                scrollOutputToEnd();
+                revealOutputWindow();
                 return;
             } else if (rev.data.done) {
                 runnerWorker.terminate();
@@ -133,16 +137,7 @@ zigWorker.onmessage = ev => {
 
 const splitPane = document.getElementById("split-pane")! as HTMLDivElement;
 const resizeBar = document.getElementById("resize-bar")! as HTMLDivElement;
-
-function clamp(value, min, max) {
-    if (value < min) {
-        return min;
-    } else if (value > max) {
-        return max;
-    } else {
-        return value;
-    }
-}
+let resizeBarPreviousSize = 70;
 
 let resizing = false;
 resizeBar.addEventListener("mousedown", event => {
@@ -154,7 +149,7 @@ resizeBar.addEventListener("mousedown", event => {
 });
 window.addEventListener("mousemove", event => {
     if (resizing) {
-        const percent = clamp(event.clientY / splitPane.getBoundingClientRect().height * 100, 40, 100);
+        const percent = Math.min(Math.max(10, event.clientY / splitPane.getBoundingClientRect().height * 100), 100);
         splitPane.style.setProperty("--editor-height-percent", `${percent}%`);
     }
 });
@@ -162,6 +157,21 @@ window.addEventListener("mouseup", event => {
     resizing = false;
     document.body.style.removeProperty("user-select");
     document.body.style.removeProperty("cursor");
+
+    // fully close the output window when it's almost closed
+    const editorHeightPercent = parseFloat(splitPane.style.getPropertyValue("--editor-height-percent"));
+    if (editorHeightPercent >= 90) {
+        splitPane.style.setProperty("--editor-height-percent", "100%");
+    }
+});
+resizeBar.addEventListener("dblclick", event => {
+    const editorHeightPercent = parseFloat(splitPane.style.getPropertyValue("--editor-height-percent"));
+    if (editorHeightPercent == 100) {
+        splitPane.style.setProperty("--editor-height-percent", `${resizeBarPreviousSize}%`);
+    } else {
+        resizeBarPreviousSize = editorHeightPercent;
+        splitPane.style.setProperty("--editor-height-percent", `100%`);
+    }
 });
 
 const outputsRun = document.getElementById("run")! as HTMLButtonElement;
@@ -177,6 +187,7 @@ outputsRun.addEventListener("click", async () => {
     zigOutput.classList.add("zig-output");
     zigOutput.classList.add("latest");
     document.getElementById("output")!.appendChild(zigOutput);
+    revealOutputWindow();
 
     zigWorker.postMessage({
         run: (await editor).state.doc.toString(),
