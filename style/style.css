@@ -2,18 +2,20 @@
 @import "zig-theme.css";
 
 :root {
-    --background: hsl(0, 0%, 10%);
     --button-background: hsl(40, 75%, 40%);
     --output-background: hsl(0, 0%, 90%);
     --footer-background: hsl(0, 0%, 95%);
     --footer-text: black;
     --output-text: black;
-    --resizer-color: hsl(0, 0%, 80%);
+    --resizer-color: hsl(0, 0%, 20%);
+    --resizer-pivot-color: hsl(0, 0%, 100%);
 
-    --output-zig-background: hsl(37, 20%, 25%);
+    --output-zig-outdated-background: hsl(37, 20%, 25%);
     --output-zig-latest-background: hsl(37, 40%, 80%);
-    --output-runner-background: hsl(200, 15%, 25%);
+    --output-runner-outdated-background: hsl(200, 15%, 25%);
     --output-runner-latest-background: hsl(200, 30%, 80%);
+    --output-outdated-text: hsl(0, 0%, 60%);
+    --output-latest-text: hsl(0, 0%, 0%);
 
     --tooltip-background: hsl(0, 0%, 100%);
     --tooltip-text: hsl(0, 0%, 0%);
@@ -24,17 +26,20 @@
 
 @media (prefers-color-scheme: dark) {
     :root {
-        --output-background: hsl(0, 0%, 5%);
         --button-background: hsl(40, 75%, 25%);
+        --output-background: hsl(0, 0%, 8%);
         --footer-background: hsl(0, 0%, 10%);
         --footer-text: hsl(0, 0%, 80%);
         --output-text: hsl(0, 0%, 90%);
-        --resizer-color: hsl(0, 0%, 50%);
+        --resizer-color: hsl(0, 0%, 18%);
+        --resizer-pivot-color: hsl(0, 0%, 70%);
 
-        --output-zig-background: hsl(37, 93%, 5%);
+        --output-zig-outdated-background: hsl(37, 93%, 5%);
         --output-zig-latest-background: hsl(37, 93%, 10%);
-        --output-runner-background: hsl(200, 93%, 5%);
+        --output-runner-outdated-background: hsl(200, 93%, 5%);
         --output-runner-latest-background: hsl(200, 93%, 10%);
+        --output-outdated-text: hsl(0, 0%, 60%);
+        --output-latest-text: hsl(0, 0%, 100%);
 
         --tooltip-background: hsl(0, 0%, 0%);
         --tooltip-text: hsl(0, 0%, 100%);
@@ -53,7 +58,6 @@ html, body {
     margin: 0;
     padding: 0;
     
-    background-color: var(--background);
     font-size: 13pt;
 }
 
@@ -143,7 +147,7 @@ a {
     position: relative;
     width: 100%;
     cursor: row-resize;
-    background-color: hsl(0, 0%, 15%);
+    background-color: var(--resizer-color);
 }
 
 #resize-bar::before {
@@ -160,7 +164,7 @@ a {
     top: 50%;
     left: 50%;
     width: 5rem;
-    border: 2px dashed var(--resizer-color);
+    border: 2px dashed var(--resizer-pivot-color);
     border-radius: 100px;
     transform: translate(-50%,-50%);
 }
@@ -215,19 +219,29 @@ ul {
 
     &>.zig-output {
         padding: 1rem;
-        background-color: var(--output-zig-background);
     
         &.latest {
             background-color: var(--output-zig-latest-background);
+            color: var(--output-latest-text);
+        }
+
+        &:not(.latest) {
+            background-color: var(--output-zig-outdated-background);
+            color: var(--output-outdated-text);
         }
     }
 
     &>.runner-output {
         padding: 1rem;
-        background-color: var(--output-runner-background);
     
         &.latest {
             background-color: var(--output-runner-latest-background);
+            color: var(--output-latest-text);
+        }
+
+        &:not(.latest) {
+            background-color: var(--output-runner-outdated-background);
+            color: var(--output-outdated-text);
         }
     }
 
