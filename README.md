@@ -1,4 +1,4 @@
-# Zig Playground
+# Zigtools Playground
 
 Works pretty well in a bunch of browsers, but note the required security headers.
 
