@@ -1,14 +1,7 @@
-import { WASI, PreopenDirectory, Fd, File, ConsoleStdout, OpenFile, Inode } from "@bjorn3/browser_wasi_shim";
-import { getLatestZigArchive } from "../utils";
+import { WASI, PreopenDirectory, Fd, File, OpenFile, Inode } from "@bjorn3/browser_wasi_shim";
+import { getLatestZigArchive, stderrOutput } from "../utils";
 // @ts-ignore
 import zigWasm from "../../zig-out/bin/zig.wasm?url";
-
-function stderrOutput(): ConsoleStdout {
-    const dec = new TextDecoder("utf-8", { fatal: false });
-    return new ConsoleStdout((buffer) => {
-        postMessage({ stderr: dec.decode(buffer, { stream: true }) });
-    });
-}
 
 let currentlyRunning = false;
 async function run(source: string) {

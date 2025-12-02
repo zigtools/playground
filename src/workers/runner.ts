@@ -1,13 +1,7 @@
 // Runs compiled Zig code
 
-import { WASI, PreopenDirectory, OpenFile, File, ConsoleStdout } from "@bjorn3/browser_wasi_shim";
-
-function stderrOutput(): ConsoleStdout {
-    const dec = new TextDecoder("utf-8", { fatal: false });
-    return new ConsoleStdout((buffer) => {
-        postMessage({ stderr: dec.decode(buffer, { stream: true }) });
-    });
-}
+import { WASI, PreopenDirectory, OpenFile, File } from "@bjorn3/browser_wasi_shim";
+import { stderrOutput } from "../utils";
 
 async function run(wasmData: Uint8Array) {
     let args = ["main.wasm"];
