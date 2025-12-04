@@ -1,7 +1,7 @@
 // @ts-ignore
 import zigTarGz from "../zig-out/zig.tar.gz?inline";
 import { untar } from "@andrewbranch/untar.js";
-import { Directory, File } from "@bjorn3/browser_wasi_shim";
+import { Directory, File, ConsoleStdout, wasi as wasi_defs } from "@bjorn3/browser_wasi_shim";
 
 export async function getLatestZigArchive() {
     const ds = new DecompressionStream("gzip");
@@ -42,4 +42,15 @@ function convert(node: TreeNode): Directory {
             }
         })
     )
+}
+
+export function stderrOutput(): ConsoleStdout {
+    const dec = new TextDecoder("utf-8", { fatal: false });
+    const stderr = new ConsoleStdout((buffer) => {
+        postMessage({ stderr: dec.decode(buffer, { stream: true }) });
+    });
+    stderr.fd_pwrite = (data, offset) => {
+        return { ret: wasi_defs.ERRNO_SPIPE, nwritten: 0 };
+    }
+    return stderr;
 }
