@@ -1,7 +1,5 @@
 import { WASI, PreopenDirectory, Fd, ConsoleStdout } from "@bjorn3/browser_wasi_shim";
 import { getLatestZigArchive } from "../utils";
-// @ts-ignore
-import zlsWasm from "../../zig-out/bin/zls.wasm?url";
 
 class Stdio extends Fd {
     constructor() {
@@ -58,7 +56,7 @@ onmessage = (event) => {
     ];
     let wasi = new WASI(args, env, fds, { debug: false });
 
-    const { instance: localInstance } = await WebAssembly.instantiateStreaming(fetch(zlsWasm), {
+    const { instance: localInstance } = await WebAssembly.instantiateStreaming(fetch(new URL("../../zig-out/bin/zls.wasm", import.meta.url)), {
         "wasi_snapshot_preview1": wasi.wasiImport,
     });
 
