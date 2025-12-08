@@ -1,7 +1,5 @@
 import { WASI, PreopenDirectory, Fd, File, OpenFile, Inode } from "@bjorn3/browser_wasi_shim";
 import { getLatestZigArchive, stderrOutput } from "../utils";
-// @ts-ignore
-import zigWasm from "../../zig-out/bin/zig.wasm?url";
 
 let currentlyRunning = false;
 async function run(source: string) {
@@ -36,7 +34,7 @@ async function run(source: string) {
     ] satisfies Fd[];
     let wasi = new WASI(args, env, fds, { debug: false });
 
-    const { instance } = await WebAssembly.instantiateStreaming(fetch(zigWasm), {
+    const { instance } = await WebAssembly.instantiateStreaming(fetch(new URL("../../zig-out/bin/zig.wasm", import.meta.url)), {
         "wasi_snapshot_preview1": wasi.wasiImport,
     });
 
