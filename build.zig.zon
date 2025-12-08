@@ -5,8 +5,8 @@
     .minimum_zig_version = "0.15.1",
     .dependencies = .{
         .zls = .{
-            .url = "git+https://github.com/zigtools/zls?ref=0.15.0#ce6c8f02c78e622421cfc2405c67c5222819ec03",
-            .hash = "zls-0.15.0-rmm5fkjqIwDZpmDHyKwxa9K2gcI3FPaGVFPwjYWFBM5B",
+            .url = "git+https://github.com/zigtools/zls?ref=0.15.1#f91b2e1e305e5d5bd3725aea90f9f9bfb3dce055",
+            .hash = "zls-0.15.1-rmm5fgQ2JADjDh84Ja3pDBZ1io_kKdHS2YhQyvBYz66r",
         },
         .zig = .{
             .url = "git+https://github.com/zigtools/zig?ref=wasm32-wasi#3ee3d1aaf1db2e0501cd5372b68408be0c4c2133",
