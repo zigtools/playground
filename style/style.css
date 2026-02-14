@@ -3,6 +3,7 @@
 
 :root {
     --button-background: hsl(40, 75%, 40%);
+    --button-hover-background: hsl(40, 75%, 42%);
     --output-background: hsl(0, 0%, 90%);
     --footer-background: hsl(0, 0%, 95%);
     --footer-text: black;
@@ -143,6 +144,145 @@ a {
     }
 }
 
+#editor-container {
+    display: flex;
+    flex-direction: column;
+    background-color: var(--footer-background);
+}
+
+#tabs-bar {
+    display: flex;
+    align-items: center;
+    background-color: var(--footer-background);
+    border-bottom: 1px solid var(--resizer-color);
+    padding: 0;
+    position: relative;
+    height: 36px;
+}
+
+#tabs {
+    height: 100%;
+    display: flex;
+    overflow-x: auto;
+    overflow-y: hidden;
+    flex-grow: 1;
+    scrollbar-width: none;
+    padding-left: 0.5rem;
+    position: relative;
+}
+
+#tabs::-webkit-scrollbar {
+    display: none;
+}
+
+#tabs.scroll-shadow-right {
+    mask-image: linear-gradient(to right, black calc(100% - 24px), transparent 100%);
+    -webkit-mask-image: linear-gradient(to right, black calc(100% - 24px), transparent 100%);
+}
+
+.tab {
+    display: flex;
+    align-items: center;
+    padding: 0 1rem;
+    height: 100%;
+    font-size: 0.8em;
+    color: var(--footer-text);
+    cursor: pointer;
+    border-right: 1px solid var(--resizer-color);
+    background: transparent;
+    user-select: none;
+    white-space: nowrap;
+    transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+    position: relative;
+    opacity: 0.7;
+    gap: 0.4rem;
+}
+
+.tab.active {
+    background-color: var(--output-background);
+    opacity: 1;
+}
+
+.tab.active::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background-color: #f7a41d;
+}
+
+.tab:hover:not(.active) {
+    background-color: rgba(0, 0, 0, 0.05);
+    opacity: 0.9;
+}
+
+@media (prefers-color-scheme: dark) {
+    .tab:hover:not(.active) {
+        background-color: rgba(255, 255, 255, 0.08);
+        opacity: 0.9;
+    }
+}
+
+.tab-close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    border-radius: 3px;
+    opacity: 0.6;
+    transition: opacity 0.15s ease, background-color 0.15s ease;
+}
+
+.tab-close:hover {
+    opacity: 1;
+}
+
+.tab-close:hover {
+    background-color: rgba(0, 0, 0, 0.1);
+}
+
+@media (prefers-color-scheme: dark) {
+    .tab-close:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+    }
+}
+
+#add-file {
+    background: transparent;
+    border: none;
+    color: var(--footer-text);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.35rem;
+    border-radius: 4px;
+    margin-left: 0.25rem;
+    margin-right: 0.25rem;
+    flex-shrink: 0;
+    opacity: 0.7;
+    transition: opacity 0.15s ease, background-color 0.15s ease;
+}
+
+#add-file:hover {
+    opacity: 1;
+    background-color: rgba(0, 0, 0, 0.08);
+}
+
+@media (prefers-color-scheme: dark) {
+    #add-file:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+    }
+}
+
+#editor {
+    flex-grow: 1;
+    overflow: hidden;
+}
+
 #resize-bar {
     position: relative;
     width: 100%;
@@ -192,18 +332,30 @@ ul {
 }
 
 #run {
-    position: fixed;
-    top: 1rem;
-    right: 1rem;
     z-index: 1;
     border: none;
-    border-radius: 3px;
-    padding: 0.5rem 1.85rem;
-    font-size: 1em;
-    font-weight: 700;
+    border-radius: 4px;
+    padding: 0 1rem;
+    font-size: 0.7em;
+    font-weight: 600;
+    letter-spacing: 0.02em;
     cursor: pointer;
     background-color: var(--button-background);
     color: var(--button-text);
+    height: 22px;
+    margin-left: auto;
+    margin-right: 0.5rem;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    transition: background-color 0.15s ease, transform 0.1s ease, box-shadow 0.15s ease;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+    margin: 0px 6px 1px 1px;
+}
+
+#run:hover {
+    background-color: var(--button-hover-background);
 }
 
 #output {

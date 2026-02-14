@@ -1,5 +1,7 @@
 const std = @import("std");
+const mod = @import("mod.zig");
 
 pub fn main() !void {
-    try std.fs.File.stdout().writeAll("Hello, World!\n");
+    std.debug.print("All your {s} are belong to us.\n", .{"codebase"});
+    try mod.bufferedPrint();
 }

@@ -9,11 +9,25 @@
     <link rel="stylesheet" href="style/style.css">
 </head>
 <body>
-    <button id="run">Run</button>
-
     <main>
         <div id="split-pane" style="--editor-height-percent: 100%;">
-            <div id="editor"></div>
+            <div id="editor-container">
+                <div id="tabs-bar">
+                    <div id="tabs"></div>
+                    <button id="add-file" title="Add new file">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                            <path d="M14 7H9V2H7V7H2V9H7V14H9V9H14V7Z" />
+                        </svg>
+                    </button>
+                    <button id="run">
+                        <svg width="10" height="10" viewBox="0 0 16 16" fill="currentColor">
+                            <path d="M3.5 2.5v11l10-5.5z" />
+                        </svg>
+                        Run
+                    </button>
+                </div>
+                <div id="editor"></div>
+            </div>
             <div id="resize-bar"></div>
             <div id="output"></div>
         </div>

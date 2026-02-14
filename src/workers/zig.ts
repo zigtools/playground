@@ -2,7 +2,7 @@ import { WASI, PreopenDirectory, Fd, File, OpenFile, Inode } from "@bjorn3/brows
 import { getLatestZigArchive, stderrOutput } from "../utils";
 
 let currentlyRunning = false;
-async function run(source: string) {
+async function run(files: { [filename: string]: string }) {
     if (currentlyRunning) return;
 
     currentlyRunning = true;
@@ -22,13 +22,17 @@ async function run(source: string) {
         "-fno-entry", // prevent the native webassembly backend from adding a start function to the module 
     ];
     let env = [];
+
+    const fileContents = new Map<string, Inode>();
+    for (const [filename, content] of Object.entries(files)) {
+        fileContents.set(filename, new File(new TextEncoder().encode(content)));
+    }
+
     let fds = [
         new OpenFile(new File([])), // stdin
         stderrOutput(), // stdout
         stderrOutput(), // stderr
-        new PreopenDirectory(".", new Map<string, Inode>([
-            ["main.zig", new File(new TextEncoder().encode(source))],
-        ])),
+        new PreopenDirectory(".", fileContents),
         new PreopenDirectory("/lib", libDirectory.contents),
         new PreopenDirectory("/cache", new Map()),
     ] satisfies Fd[];
@@ -64,7 +68,7 @@ async function run(source: string) {
 }
 
 onmessage = (event) => {
-    if (event.data.run) {
-        run(event.data.run);
+    if (event.data.files) {
+        run(event.data.files);
     }
 }

@@ -13,6 +13,8 @@ import ZigWorker from './workers/zig.ts?worker';
 import RunnerWorker from './workers/runner.ts?worker';
 // @ts-ignore
 import zigMainSource from './main.zig?raw';
+// @ts-ignore
+import zigModSource from './mod.zig?raw';
 
 export default class ZlsClient extends LspClient {
     public worker: Worker;
@@ -20,6 +22,7 @@ export default class ZlsClient extends LspClient {
     constructor(worker: Worker) {
         super("file:///", []);
         this.worker = worker;
+        this.autoClose = false;
 
         this.worker.addEventListener("message", this.messageHandler);
     }
@@ -71,28 +74,168 @@ export default class ZlsClient extends LspClient {
 
 let client = new ZlsClient(new ZLSWorker());
 
-let editor = (async () => {
+interface PlaygroundFile {
+    name: string;
+    state: EditorState;
+}
+
+let files: PlaygroundFile[] = [];
+let activeFileIndex = -1;
+let editorView: EditorView;
+
+function createEditorState(filename: string, content: string) {
+    return EditorState.create({
+        doc: content,
+        extensions: [
+            basicSetup,
+            editorTheme,
+            indentUnit.of("    "),
+            client.createPlugin(`file:///${filename}`, "zig", true),
+            keymap.of([indentWithTab]),
+        ],
+    });
+}
+
+function updateTabs() {
+    const tabsContainer = document.getElementById("tabs")!;
+    tabsContainer.innerHTML = "";
+
+    files.forEach((file, index) => {
+        const tab = document.createElement("div");
+        tab.className = `tab ${index === activeFileIndex ? "active" : ""}`;
+
+        const nameSpan = document.createElement("span");
+        nameSpan.className = "tab-name";
+        nameSpan.textContent = file.name;
+        tab.appendChild(nameSpan);
+
+        if (file.name !== "main.zig") {
+            const closeBtn = document.createElement("span");
+            closeBtn.className = "tab-close";
+            closeBtn.innerHTML = "&times;";
+            closeBtn.onclick = (e) => {
+                e.stopPropagation();
+                removeFile(index);
+            };
+            tab.appendChild(closeBtn);
+        }
+
+        tab.onclick = () => switchFile(index);
+        tab.ondblclick = () => renameFile(index);
+
+        tabsContainer.appendChild(tab);
+    });
+}
+
+async function switchFile(index: number) {
+    if (index === activeFileIndex) return;
+
+    if (activeFileIndex !== -1 && editorView) {
+        files[activeFileIndex].state = editorView.state;
+    }
+
+    activeFileIndex = index;
+    const file = files[index];
+
+    if (!editorView) {
+        editorView = new EditorView({
+            state: file.state,
+            parent: document.getElementById("editor")!,
+        });
+    } else {
+        editorView.setState(file.state);
+    }
+
+    updateTabs();
+}
+
+function addFile() {
+    let name = "untitled.zig";
+    let counter = 0;
+    while (files.some(f => f.name === name)) {
+        counter++;
+        name = `untitled${counter}.zig`;
+    }
+
+    const newFile: PlaygroundFile = {
+        name,
+        state: createEditorState(name, ""),
+    };
+    files.push(newFile);
+    switchFile(files.length - 1);
+}
+
+function removeFile(index: number) {
+    if (files[index].name === "main.zig") return;
+
+    files.splice(index, 1);
+    if (activeFileIndex >= files.length) {
+        activeFileIndex = files.length - 1;
+    }
+    switchFile(activeFileIndex);
+    updateTabs();
+}
+
+function renameFile(index: number) {
+    const file = files[index];
+    const newName = prompt("Rename file:", file.name);
+    if (newName && newName !== file.name && newName.endsWith(".zig")) {
+        if (files.some(f => f.name === newName)) {
+            alert("File already exists!");
+            return;
+        }
+
+        const content = file.state.doc.toString();
+        file.name = newName;
+        file.state = createEditorState(newName, content);
+
+        if (index === activeFileIndex) {
+            editorView.setState(file.state);
+        }
+        updateTabs();
+    }
+}
+
+(async () => {
     await client.initialize();
 
-    let editor = new EditorView({
-        extensions: [],
-        parent: document.getElementById("editor")!,
-        state: EditorState.create({
-            doc: zigMainSource,
-            extensions: [basicSetup, editorTheme, indentUnit.of("    "), client.createPlugin("file:///main.zig", "zig", true), keymap.of([indentWithTab]),],
-        }),
+    files.push({
+        name: "main.zig",
+        state: createEditorState("main.zig", zigMainSource),
     });
 
-    await client.plugins[0].updateDecorations();
-    await client.plugins[0].updateFoldingRanges();
-    editor.update([]);
+    files.push({
+        name: "mod.zig",
+        state: createEditorState("mod.zig", zigModSource),
+    });
 
-    return editor;
+    await switchFile(0);
 })();
+
+document.getElementById("add-file")?.addEventListener("click", addFile);
+
+// Convert vertical mouse wheel to horizontal scroll on the tabs bar
+const tabsEl = document.getElementById("tabs")!;
+tabsEl.addEventListener("wheel", (e) => {
+    if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+        e.preventDefault();
+        tabsEl.scrollLeft += e.deltaY;
+    }
+}, { passive: false });
+
+// Show/hide right scroll shadow when tabs overflow
+function updateTabsScrollShadow() {
+    const hasOverflowRight = tabsEl.scrollLeft + tabsEl.clientWidth < tabsEl.scrollWidth - 1;
+    tabsEl.classList.toggle("scroll-shadow-right", hasOverflowRight);
+}
+tabsEl.addEventListener("scroll", updateTabsScrollShadow);
+new ResizeObserver(updateTabsScrollShadow).observe(tabsEl);
+new MutationObserver(updateTabsScrollShadow).observe(tabsEl, { childList: true });
 
 function revealOutputWindow() {
     const outputs = document.getElementById("output")!;
     outputs.scrollTo(0, outputs.scrollHeight!);
+    const splitPane = document.getElementById("split-pane")!;
     const editorHeightPercent = parseFloat(splitPane.style.getPropertyValue("--editor-height-percent"));
     if (editorHeightPercent == 100) {
         splitPane.style.setProperty("--editor-height-percent", `${resizeBarPreviousSize}%`);
@@ -101,7 +244,7 @@ function revealOutputWindow() {
 
 let zigWorker = new ZigWorker();
 
-zigWorker.onmessage = ev => {
+zigWorker.onmessage = (ev: MessageEvent) => {
     if (ev.data.stderr) {
         document.querySelector(".zig-output:last-child")!.textContent += ev.data.stderr;
         revealOutputWindow();
@@ -120,7 +263,7 @@ zigWorker.onmessage = ev => {
 
         runnerWorker.postMessage({ run: ev.data.compiled });
 
-        runnerWorker.onmessage = rev => {
+        runnerWorker.onmessage = (rev: MessageEvent) => {
             if (rev.data.stderr) {
                 document.querySelector(".runner-output:last-child")!.textContent += rev.data.stderr;
                 revealOutputWindow();
@@ -189,7 +332,16 @@ outputsRun.addEventListener("click", async () => {
     document.getElementById("output")!.appendChild(zigOutput);
     revealOutputWindow();
 
+    const filesToSend: { [filename: string]: string } = {};
+    files.forEach((file, index) => {
+        if (index === activeFileIndex && editorView) {
+            filesToSend[file.name] = editorView.state.doc.toString();
+        } else {
+            filesToSend[file.name] = file.state.doc.toString();
+        }
+    });
+
     zigWorker.postMessage({
-        run: (await editor).state.doc.toString(),
+        files: filesToSend
     });
 });
