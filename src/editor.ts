@@ -5,6 +5,7 @@ import { JsonRpcMessage, LspClient } from "./lsp";
 import { indentWithTab } from "@codemirror/commands";
 import { indentUnit } from "@codemirror/language";
 import { editorTheme } from "./theme.ts";
+import { fileManager } from "./file.ts";
 // @ts-ignore
 import ZLSWorker from './workers/zls.ts?worker';
 // @ts-ignore
@@ -74,12 +75,13 @@ export default class ZlsClient extends LspClient {
 
 let client = new ZlsClient(new ZLSWorker());
 
-interface PlaygroundFile {
+// Local editor state storage (EditorState is editor-specific, not stored in FileManager)
+interface EditorFileState {
     name: string;
     state: EditorState;
 }
 
-let files: PlaygroundFile[] = [];
+let editorFiles: EditorFileState[] = [];
 let activeFileIndex = -1;
 let editorView: EditorView;
 
@@ -100,7 +102,7 @@ function updateTabs() {
     const tabsContainer = document.getElementById("tabs")!;
     tabsContainer.innerHTML = "";
 
-    files.forEach((file, index) => {
+    editorFiles.forEach((file, index) => {
         const tab = document.createElement("div");
         tab.className = `tab ${index === activeFileIndex ? "active" : ""}`;
 
@@ -127,15 +129,24 @@ function updateTabs() {
     });
 }
 
+function syncCurrentFileToManager() {
+    if (activeFileIndex !== -1 && editorView) {
+        const file = editorFiles[activeFileIndex];
+        fileManager.updateContent(file.name, editorView.state.doc.toString());
+    }
+}
+
 async function switchFile(index: number) {
     if (index === activeFileIndex) return;
 
+    // Save current editor state and sync to FileManager
     if (activeFileIndex !== -1 && editorView) {
-        files[activeFileIndex].state = editorView.state;
+        editorFiles[activeFileIndex].state = editorView.state;
+        syncCurrentFileToManager();
     }
 
     activeFileIndex = index;
-    const file = files[index];
+    const file = editorFiles[index];
 
     if (!editorView) {
         editorView = new EditorView({
@@ -152,40 +163,49 @@ async function switchFile(index: number) {
 function addFile() {
     let name = "untitled.zig";
     let counter = 0;
-    while (files.some(f => f.name === name)) {
+    while (fileManager.hasFile(name)) {
         counter++;
         name = `untitled${counter}.zig`;
     }
 
-    const newFile: PlaygroundFile = {
+    const content = "";
+    fileManager.addFile(name, content);
+
+    const newFile: EditorFileState = {
         name,
-        state: createEditorState(name, ""),
+        state: createEditorState(name, content),
     };
-    files.push(newFile);
-    switchFile(files.length - 1);
+    editorFiles.push(newFile);
+    switchFile(editorFiles.length - 1);
 }
 
 function removeFile(index: number) {
-    if (files[index].name === "main.zig") return;
+    const file = editorFiles[index];
+    if (file.name === "main.zig") return;
 
-    files.splice(index, 1);
-    if (activeFileIndex >= files.length) {
-        activeFileIndex = files.length - 1;
+    fileManager.removeFile(file.name);
+    editorFiles.splice(index, 1);
+
+    if (activeFileIndex >= editorFiles.length) {
+        activeFileIndex = editorFiles.length - 1;
     }
     switchFile(activeFileIndex);
     updateTabs();
 }
 
 function renameFile(index: number) {
-    const file = files[index];
-    const newName = prompt("Rename file:", file.name);
-    if (newName && newName !== file.name && newName.endsWith(".zig")) {
-        if (files.some(f => f.name === newName)) {
+    const file = editorFiles[index];
+    const oldName = file.name;
+    const newName = prompt("Rename file:", oldName);
+    if (newName && newName !== oldName && newName.endsWith(".zig")) {
+        if (fileManager.hasFile(newName)) {
             alert("File already exists!");
             return;
         }
 
         const content = file.state.doc.toString();
+        fileManager.renameFile(oldName, newName);
+
         file.name = newName;
         file.state = createEditorState(newName, content);
 
@@ -199,12 +219,16 @@ function renameFile(index: number) {
 (async () => {
     await client.initialize();
 
-    files.push({
+    // Default template files (`zig init` (0.15.2) without the comments)
+    fileManager.addFile("main.zig", zigMainSource);
+    fileManager.addFile("mod.zig", zigModSource);
+
+    editorFiles.push({
         name: "main.zig",
         state: createEditorState("main.zig", zigMainSource),
     });
 
-    files.push({
+    editorFiles.push({
         name: "mod.zig",
         state: createEditorState("mod.zig", zigModSource),
     });
@@ -331,15 +355,11 @@ outputsRun.addEventListener("click", async () => {
     zigOutput.classList.add("latest");
     document.getElementById("output")!.appendChild(zigOutput);
     revealOutputWindow();
+    syncCurrentFileToManager();
 
-    const filesToSend: { [filename: string]: string } = {};
-    files.forEach((file, index) => {
-        if (index === activeFileIndex && editorView) {
-            filesToSend[file.name] = editorView.state.doc.toString();
-        } else {
-            filesToSend[file.name] = file.state.doc.toString();
-        }
-    });
+    const filesToSend = Object.fromEntries(
+        fileManager.getAllFiles().map(file => [file.name, file.content])
+    );
 
     zigWorker.postMessage({
         files: filesToSend
