@@ -3,4 +3,5 @@ dist
 .env
 repos
 .zig-cache
+zig-pkg
 zig-out

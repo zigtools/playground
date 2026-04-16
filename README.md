@@ -9,7 +9,7 @@ You can either:
 - Use it online: https://playground.zigtools.org/
 - Run it locally:
 
-Requires Zig `0.15.2`. Will automatically fetch Zig along with ZLS, compiling both for webassembly.
+Requires Zig `0.16.0`. Will automatically fetch Zig along with ZLS, compiling both for webassembly.
 
 ```bash
 zig build -Drelease
