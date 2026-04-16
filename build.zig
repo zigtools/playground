@@ -8,16 +8,18 @@ pub fn build(b: *std.Build) void {
 
     const zls_step = b.step("zls", "compile and install ZLS");
     const zig_step = b.step("zig", "compile and install Zig");
+    const compiler_rt_step = b.step("zig_compiler_rt", "compile and install compiler_rt");
     const tarball_step = b.step("zig_tarball", "compile and install zig.tar.gz");
 
     b.getInstallStep().dependOn(zls_step);
     b.getInstallStep().dependOn(zig_step);
+    b.getInstallStep().dependOn(compiler_rt_step);
     b.getInstallStep().dependOn(tarball_step);
 
     const zls_dependency = b.dependency("zls", .{
         .target = target,
         .optimize = optimize,
-        // .@"version-string" = @as([]const u8, "0.16.0-dev"),
+        // .@"version-string" = @as([]const u8, "0.17.0-dev"),
     });
 
     const zls_exe = b.addExecutable(.{
@@ -38,11 +40,22 @@ pub fn build(b: *std.Build) void {
     const zig_dependency = b.dependency("zig", .{
         .target = target,
         .optimize = optimize,
-        .@"version-string" = @as([]const u8, "0.15.1"),
+        .@"version-string" = @as([]const u8, "0.17.0"),
         .@"no-lib" = true,
         .dev = "wasm",
     });
     zig_step.dependOn(installArtifact(b, zig_dependency.artifact("zig"), enable_wasm_opt));
+
+    const lib_compiler_rt = b.addLibrary(.{
+        .linkage = .static,
+        .name = "compiler_rt",
+        .root_module = b.createModule(.{
+            .root_source_file = zig_dependency.path("lib/compiler_rt.zig"),
+            .target = target,
+            .optimize = optimize,
+        }),
+    });
+    compiler_rt_step.dependOn(&b.addInstallArtifact(lib_compiler_rt, .{ .dest_dir = .{ .override = .prefix } }).step);
 
     const run_tar = b.addSystemCommand(&.{ "tar", "-czf" });
     const zig_tar_gz = run_tar.addOutputFileArg("zig.tar.gz");

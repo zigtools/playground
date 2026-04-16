@@ -8,18 +8,15 @@ async function run(source: string) {
     currentlyRunning = true;
 
     const libDirectory = await getLatestZigArchive();
+    const libCompilerRt = await fetch(new URL("../../zig-out/libcompiler_rt.a", import.meta.url));
 
-    // -fno-llvm -fno-lld is set explicitly to ensure the native WASM backend is
-    // used in preference to LLVM. This may be removable once the non-LLVM
-    // backends become more mature.
     let args = [
         "zig.wasm",
         "build-exe",
         "main.zig",
-        "-fno-llvm",
-        "-fno-lld",
-        "-fno-ubsan-rt",
-        "-fno-entry", // prevent the native webassembly backend from adding a start function to the module 
+        "libcompiler_rt.a",
+        "-fno-compiler-rt", // manually linked because the self hosted webassembly backend cannot compile it by itself
+        "-fno-entry", // prevent the native webassembly backend from adding a start function to the module
     ];
     let env = [];
     let fds = [
@@ -28,6 +25,7 @@ async function run(source: string) {
         stderrOutput(), // stderr
         new PreopenDirectory(".", new Map<string, Inode>([
             ["main.zig", new File(new TextEncoder().encode(source))],
+            ["libcompiler_rt.a", new File(await libCompilerRt.arrayBuffer())]
         ])),
         new PreopenDirectory("/lib", libDirectory.contents),
         new PreopenDirectory("/cache", new Map()),

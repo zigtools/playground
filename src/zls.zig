@@ -12,7 +12,7 @@ pub const std_options: std.Options = .{
 
 fn logFn(
     comptime level: std.log.Level,
-    comptime scope: @Type(.enum_literal),
+    comptime scope: @EnumLiteral(),
     comptime format: []const u8,
     args: anytype,
 ) void {
@@ -20,14 +20,14 @@ fn logFn(
     var buffer: [4096]u8 = undefined;
     comptime std.debug.assert(buffer.len >= zls.lsp.minimum_logging_buffer_size);
 
-    const lsp_message_type: zls.lsp.types.MessageType = switch (level) {
+    const lsp_message_type: zls.lsp.types.window.MessageType = switch (level) {
         .err => .Error,
         .warn => .Warning,
         .info => .Info,
         .debug => .Debug,
     };
     const json_message = zls.lsp.bufPrintLogMessage(&buffer, lsp_message_type, format, args);
-    transport.writeJsonMessage(json_message) catch {};
+    transport.writeJsonMessage(threaded.io(), json_message) catch {};
 }
 
 var transport: zls.lsp.Transport = .{
@@ -37,15 +37,18 @@ var transport: zls.lsp.Transport = .{
     },
 };
 
-fn readJsonMessage(_: *zls.lsp.Transport, _: std.mem.Allocator) (std.mem.Allocator.Error || zls.lsp.Transport.ReadError)![]u8 {
+fn readJsonMessage(_: *zls.lsp.Transport, _: std.Io, _: std.mem.Allocator) (std.mem.Allocator.Error || zls.lsp.Transport.ReadError)![]u8 {
     unreachable;
 }
 
-fn writeJsonMessage(_: *zls.lsp.Transport, json_message: []const u8) zls.lsp.Transport.WriteError!void {
+fn writeJsonMessage(_: *zls.lsp.Transport, _: std.Io, json_message: []const u8) zls.lsp.Transport.WriteError!void {
     output_message_starts.append(allocator, output_message_bytes.items.len) catch return error.NoSpaceLeft;
     output_message_bytes.appendSlice(allocator, json_message) catch return error.NoSpaceLeft;
 }
 
+var threaded: std.Io.Threaded = .init_single_threaded;
+var environ_map: std.process.Environ.Map = undefined;
+var config_manager: zls.configuration.Manager = undefined;
 var server: *zls.Server = undefined;
 
 var input_bytes: std.ArrayList(u8) = .empty;
@@ -54,12 +57,15 @@ var output_message_starts: std.ArrayList(usize) = .empty;
 var output_message_bytes: std.ArrayList(u8) = .empty;
 
 export fn createServer() void {
+    const io = threaded.io();
+    environ_map = .init(allocator);
+    config_manager = zls.configuration.Manager.init(io, allocator, &environ_map) catch @panic("server creation failed");
     server = zls.Server.create(.{
+        .io = io,
         .allocator = allocator,
-        .transport = null,
-        .config = null,
+        .transport = &transport,
+        .config_manager = &config_manager,
     }) catch @panic("server creation failed");
-    server.setTransport(&transport);
 }
 
 export fn allocMessage(len: usize) [*]const u8 {
