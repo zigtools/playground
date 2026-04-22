@@ -10,7 +10,7 @@ async function run(source: string) {
     const libDirectory = await getLatestZigArchive();
     const libCompilerRt = await fetch(new URL("../../zig-out/libcompiler_rt.a", import.meta.url));
 
-    let args = [
+    const args = [
         "zig.wasm",
         "build-exe",
         "main.zig",
@@ -18,8 +18,8 @@ async function run(source: string) {
         "-fno-compiler-rt", // manually linked because the self hosted webassembly backend cannot compile it by itself
         "-fno-entry", // prevent the native webassembly backend from adding a start function to the module
     ];
-    let env = [];
-    let fds = [
+    const env: string[] = [];
+    const fds = [
         new OpenFile(new File([])), // stdin
         stderrOutput(), // stdout
         stderrOutput(), // stderr
@@ -30,7 +30,7 @@ async function run(source: string) {
         new PreopenDirectory("/lib", libDirectory.contents),
         new PreopenDirectory("/cache", new Map()),
     ] satisfies Fd[];
-    let wasi = new WASI(args, env, fds, { debug: false });
+    const wasi = new WASI(args, env, fds, { debug: false });
 
     const { instance } = await WebAssembly.instantiateStreaming(fetch(new URL("../../zig-out/bin/zig.wasm", import.meta.url)), {
         "wasi_snapshot_preview1": wasi.wasiImport,

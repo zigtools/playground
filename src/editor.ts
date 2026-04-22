@@ -101,7 +101,7 @@ function revealOutputWindow() {
 
 let zigWorker = new ZigWorker();
 
-zigWorker.onmessage = ev => {
+zigWorker.onmessage = (ev: MessageEvent) => {
     if (ev.data.stderr) {
         document.querySelector(".zig-output:last-child")!.textContent += ev.data.stderr;
         revealOutputWindow();
@@ -120,7 +120,7 @@ zigWorker.onmessage = ev => {
 
         runnerWorker.postMessage({ run: ev.data.compiled });
 
-        runnerWorker.onmessage = rev => {
+        runnerWorker.onmessage = (rev: MessageEvent) => {
             if (rev.data.stderr) {
                 document.querySelector(".runner-output:last-child")!.textContent += rev.data.stderr;
                 revealOutputWindow();

@@ -15,7 +15,7 @@ class Stdio extends Fd {
     }
 }
 
-let instance: any;
+let instance: WebAssembly.Instance;
 let bufferedMessages: string[] = [];
 
 function sendMessage(message: string) {
@@ -42,11 +42,11 @@ onmessage = (event) => {
 };
 
 (async () => {
-    let libDirectory = await getLatestZigArchive();
+    const libDirectory = await getLatestZigArchive();
 
-    let args = ["zls.wasm"];
-    let env = [];
-    let fds = [
+    const args = ["zls.wasm"];
+    const env: string[] = [];
+    const fds = [
         new Stdio(), // stdin
         new Stdio(), // stdout
         ConsoleStdout.lineBuffered((line) => postMessage(JSON.stringify({ stderr: line }))), // stderr
@@ -54,7 +54,7 @@ onmessage = (event) => {
         new PreopenDirectory("/lib", libDirectory.contents),
         new PreopenDirectory("/cache", new Map()),
     ];
-    let wasi = new WASI(args, env, fds, { debug: false });
+    const wasi = new WASI(args, env, fds, { debug: false });
 
     const { instance: localInstance } = await WebAssembly.instantiateStreaming(fetch(new URL("../../zig-out/bin/zls.wasm", import.meta.url)), {
         "wasi_snapshot_preview1": wasi.wasiImport,
