@@ -21,7 +21,6 @@ export const editorTheme = EditorView.theme(
       backgroundColor: "var(--tooltip-background)",
       color: "var(--tooltip-text)",
     }
-  },
-  {}
+  }
 );
 

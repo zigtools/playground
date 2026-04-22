@@ -5,7 +5,7 @@ export async function getLatestZigArchive() {
     const response = await fetch(new URL("../zig-out/zig.tar.gz", import.meta.url));
     let arrayBuffer = await response.arrayBuffer();
     const magicNumber = new Uint8Array(arrayBuffer).slice(0, 2);
-    if (magicNumber[0] == 0x1F && magicNumber[1] == 0x8B) { // gzip
+    if (magicNumber[0] == 0x1F && magicNumber[1] == 0x8B) {
         const ds = new DecompressionStream("gzip");
         const response = new Response(new Response(arrayBuffer).body!.pipeThrough(ds));
         arrayBuffer = await response.arrayBuffer();
