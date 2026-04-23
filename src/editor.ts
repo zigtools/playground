@@ -1,12 +1,12 @@
-import { EditorState } from "@codemirror/state"
-import { keymap } from "@codemirror/view"
-import { EditorView, basicSetup } from "codemirror"
-import { JsonRpcMessage, LspClient } from "./lsp";
+import { EditorState } from "@codemirror/state";
+import { keymap } from "@codemirror/view";
+import { EditorView, basicSetup } from "codemirror";
+import { formatDocument } from "@codemirror/lsp-client";
 import { indentWithTab } from "@codemirror/commands";
-import { indentUnit } from "@codemirror/language";
-import { editorTheme } from "./theme.ts";
-// @ts-ignore
-import ZLSWorker from './workers/zls.ts?worker';
+import { indentUnit, syntaxHighlighting } from "@codemirror/language";
+import { zigLanguage } from "@ndim/codemirror-lang-zig";
+import { editorTheme, highlightStyle } from "./theme.ts";
+import { lspClient } from "./lsp.ts";
 // @ts-ignore
 import ZigWorker from './workers/zig.ts?worker';
 // @ts-ignore
@@ -14,81 +14,28 @@ import RunnerWorker from './workers/runner.ts?worker';
 // @ts-ignore
 import zigMainSource from './main.zig?raw';
 
-export default class ZlsClient extends LspClient {
-    public worker: Worker;
-
-    constructor(worker: Worker) {
-        super("file:///", []);
-        this.worker = worker;
-
-        this.worker.addEventListener("message", this.messageHandler);
-    }
-
-    private messageHandler = (ev: MessageEvent) => {
-        const data = JSON.parse(ev.data);
-
-        if (data.method == "window/logMessage") {
-            if (!data.stderr) {
-                switch (data.params.type) {
-                    case 5:
-                        console.debug("ZLS --- ", data.params.message);
-                        break;
-                    case 4:
-                        console.log("ZLS --- ", data.params.message);
-                        break;
-                    case 3:
-                        console.info("ZLS --- ", data.params.message);
-                        break;
-                    case 2:
-                        console.warn("ZLS --- ", data.params.message);
-                        break;
-                    case 1:
-                        console.error("ZLS --- ", data.params.message);
-                        break;
-                    default:
-                        console.error(data.params.message);
-                        break;
-                }
-            }
-        } else {
-            console.debug("LSP <<-", data);
-        }
-        this.handleMessage(data);
-    };
-
-    public async sendMessage(message: JsonRpcMessage): Promise<void> {
-        console.debug("LSP ->>", message);
-        if (this.worker) {
-            this.worker.postMessage(JSON.stringify(message));
-        }
-    }
-
-    public async close(): Promise<void> {
-        super.close();
-        this.worker.terminate();
-    }
-}
-
-let client = new ZlsClient(new ZLSWorker());
-
-let editor = (async () => {
-    await client.initialize();
-
-    let editor = new EditorView({
-        extensions: [],
-        parent: document.getElementById("editor")!,
-        state: EditorState.create({
-            doc: zigMainSource,
-            extensions: [basicSetup, editorTheme, indentUnit.of("    "), client.createPlugin("file:///main.zig", "zig", true), keymap.of([indentWithTab]),],
-        }),
-    });
-
-    await client.plugins[0].updateDecorations();
-    await client.plugins[0].updateFoldingRanges();
-    editor.update([]);
-
-    return editor;
-})();
+const editor = new EditorView({
+  extensions: [],
+  parent: document.getElementById("editor")!,
+  state: EditorState.create({
+    doc: zigMainSource,
+    extensions: [
+      basicSetup,
+      editorTheme,
+      indentUnit.of("    "),
+      keymap.of([
+        indentWithTab,
+        {
+          key: "Mod-s",
+          run: formatDocument,
+        },
+      ]),
+      zigLanguage,
+      syntaxHighlighting(highlightStyle),
+      lspClient.plugin("file:///main.zig"),
+    ],
+  }),
+});
 
 function revealOutputWindow() {
     const outputs = document.getElementById("output")!;
@@ -190,6 +137,6 @@ outputsRun.addEventListener("click", async () => {
     revealOutputWindow();
 
     zigWorker.postMessage({
-        run: (await editor).state.doc.toString(),
+        run: editor.state.doc.toString(),
     });
 });
