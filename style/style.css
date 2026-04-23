@@ -185,6 +185,35 @@ code {
     padding: 6px;
 }
 
+.cm-lsp-documentation {
+  p,
+  pre {
+    line-height: 1.2;
+  }
+
+  :not(pre) code {
+    background: #f8f8f8;
+    border: 1px dotted silver;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :not(pre) code {
+      background: #222;
+      border-color: #444;
+      border: none;
+    }
+  }
+}
+
+.cm-gutters:hover > .cm-foldGutter > .cm-gutterElement {
+  opacity: 1;
+}
+
+.cm-foldGutter > .cm-gutterElement {
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
 ul {
     list-style: circle;
     margin-left: 2rem;

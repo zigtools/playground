@@ -45,6 +45,11 @@
   font-style: italic;
 }
 
+/* Avoid the string class overriding escape sequences when dealing with nested highlighting */
+.st-escapeSequence .st-string {
+  color: inherit;
+}
+
 @media (prefers-color-scheme: dark) {
   :root {
     --code-background-color: #1e1e1e;
