@@ -86,22 +86,14 @@ const splitPane = document.getElementById("split-pane")! as HTMLDivElement;
 const resizeBar = document.getElementById("resize-bar")! as HTMLDivElement;
 let resizeBarPreviousSize = 70;
 
-let resizing = false;
-resizeBar.addEventListener("mousedown", event => {
-    if (event.buttons & 1) {
-        resizing = true;
-        document.body.style.userSelect = "none";
-        document.body.style.cursor = "row-resize";
-    }
-});
-window.addEventListener("mousemove", event => {
-    if (resizing) {
-        const percent = Math.min(Math.max(10, event.clientY / splitPane.getBoundingClientRect().height * 100), 100);
-        splitPane.style.setProperty("--editor-height-percent", `${percent}%`);
-    }
-});
-window.addEventListener("mouseup", event => {
-    resizing = false;
+function onResizeBarMove(event: MouseEvent) {
+    const percent = Math.min(Math.max(10, event.clientY / splitPane.getBoundingClientRect().height * 100), 100);
+    splitPane.style.setProperty("--editor-height-percent", `${percent}%`);
+}
+function onResizeBarMouseUp(event: MouseEvent) {
+    window.removeEventListener("mousemove", onResizeBarMove);
+    window.removeEventListener("mouseup", onResizeBarMouseUp);
+
     document.body.style.removeProperty("user-select");
     document.body.style.removeProperty("cursor");
 
@@ -109,6 +101,15 @@ window.addEventListener("mouseup", event => {
     const editorHeightPercent = parseFloat(splitPane.style.getPropertyValue("--editor-height-percent"));
     if (editorHeightPercent >= 90) {
         splitPane.style.setProperty("--editor-height-percent", "100%");
+    }
+}
+
+resizeBar.addEventListener("mousedown", event => {
+    if (event.buttons & 1) {
+        window.addEventListener("mousemove", onResizeBarMove);
+        window.addEventListener("mouseup", onResizeBarMouseUp);
+        document.body.style.userSelect = "none";
+        document.body.style.cursor = "row-resize";
     }
 });
 resizeBar.addEventListener("dblclick", event => {
