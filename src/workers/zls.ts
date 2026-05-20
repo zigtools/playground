@@ -18,17 +18,31 @@ class Stdio extends Fd {
 let instance: WebAssembly.Instance;
 let bufferedMessages: string[] = [];
 
+type ZigPtr = number;
+
+interface ZLSWasmExports {
+    memory: WebAssembly.Memory,
+
+    createServer(): void,
+    allocMessage(len: number): ZigPtr,
+    call(): void,
+    outputMessageCount(): number,
+    outputMessagePtr(index: number): ZigPtr,
+    outputMessageLen(index: number): number,
+}
+
 function sendMessage(message: string) {
     const inputMessageBuffer = new TextEncoder().encode(message);
-    const ptr = instance.exports.allocMessage(inputMessageBuffer.length);
-    new Uint8Array(instance.exports.memory.buffer).set(inputMessageBuffer, ptr);
-    instance.exports.call();
+    const exports = instance.exports as unknown as ZLSWasmExports;
+    const ptr = exports.allocMessage(inputMessageBuffer.length);
+    new Uint8Array(exports.memory.buffer).set(inputMessageBuffer, ptr);
+    exports.call();
 
-    const outputMessageCount = instance.exports.outputMessageCount();
+    const outputMessageCount = exports.outputMessageCount();
     for (let i = 0; i < outputMessageCount; i++) {
-        const start = instance.exports.outputMessagePtr(i);
-        const end = start + instance.exports.outputMessageLen(i);
-        const outputMessageBuffer = new Uint8Array(instance.exports.memory.buffer).slice(start, end);
+        const start = exports.outputMessagePtr(i);
+        const end = start + exports.outputMessageLen(i);
+        const outputMessageBuffer = new Uint8Array(exports.memory.buffer).slice(start, end);
         postMessage(new TextDecoder().decode(outputMessageBuffer));
     }
 }
