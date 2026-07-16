@@ -23,8 +23,5 @@
   "devDependencies": {
     "typescript": "^7.0.2",
     "vite": "^8.1.4"
-  },
-  "browserslist": [
-    "since 2017-06"
-  ]
+  }
 }
