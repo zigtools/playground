@@ -21,8 +21,8 @@
     "vscode-languageserver-protocol": "^3.17.3"
   },
   "devDependencies": {
-    "typescript": "~5.7.2",
-    "vite": "^6.3.1"
+    "typescript": "^7.0.2",
+    "vite": "^8.1.4"
   },
   "browserslist": [
     "since 2017-06"
