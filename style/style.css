@@ -7,8 +7,8 @@
     --footer-background: hsl(0, 0%, 95%);
     --footer-text: black;
     --output-text: black;
-    --resizer-color: hsl(0, 0%, 20%);
-    --resizer-pivot-color: hsl(0, 0%, 100%);
+    --resizer-color: hsl(0, 0%, 75%);
+    --resizer-pivot-color: hsl(0, 0%, 30%);
 
     --output-zig-outdated-background: hsl(37, 20%, 25%);
     --output-zig-latest-background: hsl(37, 40%, 80%);
