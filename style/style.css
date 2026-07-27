@@ -10,6 +10,9 @@
     --resizer-color: hsl(0, 0%, 75%);
     --resizer-pivot-color: hsl(0, 0%, 30%);
 
+    --tab-background: hsl(0, 0%, 90%);
+    --tab-hover-background: hsl(0, 0%, 93%);
+
     --output-zig-outdated-background: hsl(37, 20%, 25%);
     --output-zig-latest-background: hsl(37, 40%, 80%);
     --output-runner-outdated-background: hsl(200, 15%, 25%);
@@ -33,6 +36,9 @@
         --output-text: hsl(0, 0%, 90%);
         --resizer-color: hsl(0, 0%, 18%);
         --resizer-pivot-color: hsl(0, 0%, 70%);
+
+        --tab-background: hsl(0, 0%, 18%);
+        --tab-hover-background: hsl(0, 0%, 23%);
 
         --output-zig-outdated-background: hsl(37, 93%, 5%);
         --output-zig-latest-background: hsl(37, 93%, 10%);
@@ -130,7 +136,7 @@ a {
     height: 100%;
     overflow: hidden;
 
-    &>*:first-child {
+    &>#editor {
         height: var(--editor-height-percent);
     }
 
@@ -140,6 +146,41 @@ a {
 
     &>*:last-child {
         height: calc(100% - 0.5rem - var(--editor-height-percent));
+    }
+}
+
+#tab-bar {
+    display: flex;
+    height: 2em;
+    width: 100%;
+    font-size: smaller;
+    overflow: scroll;
+    scrollbar-width: thin;
+    background-color: var(--tab-background);
+    
+    .tab {
+        flex: 1 1 0px;
+        min-width: 100px;
+        max-width: 160px;
+        overflow: clip;
+        text-overflow: ellipsis;
+        align-content: center;
+        padding: 4px;
+        border-width: 0px 1px 1px 0px;
+        border-radius: 0px;
+        border-color: rgba(128, 128, 128, 50%);
+
+        background-color: var(--tab-background);
+        color: var(--output-text);
+    }
+
+    .tab.active {
+        background-color: var(--code-background-color);
+        border-bottom-width: 0px;
+    }
+
+    .tab:not(.active):hover {
+        background-color: var(--tab-hover-background);
     }
 }
 

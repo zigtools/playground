@@ -1,0 +1,5 @@
+- synchronise filesystem with service works
+- add button to close tab
+- add button to create tab
+- jump to source when clicking link in hover output
+- goto definition

@@ -1,12 +1,4 @@
-import { EditorState } from "@codemirror/state";
-import { keymap } from "@codemirror/view";
-import { EditorView, basicSetup } from "codemirror";
-import { formatDocument } from "@codemirror/lsp-client";
-import { indentWithTab } from "@codemirror/commands";
-import { indentUnit, syntaxHighlighting } from "@codemirror/language";
-import { zigLanguage } from "@ndim/codemirror-lang-zig";
-import { editorTheme, highlightStyle } from "./theme.ts";
-import { lspClient } from "./lsp.ts";
+import { lspClient, PlaygroundWorkspace } from "./lsp.ts";
 // @ts-ignore
 import ZigWorker from './workers/zig.ts?worker';
 // @ts-ignore
@@ -14,28 +6,7 @@ import RunnerWorker from './workers/runner.ts?worker';
 // @ts-ignore
 import zigMainSource from './main.zig?raw';
 
-const editor = new EditorView({
-  extensions: [],
-  parent: document.getElementById("editor")!,
-  state: EditorState.create({
-    doc: zigMainSource,
-    extensions: [
-      basicSetup,
-      editorTheme,
-      indentUnit.of("    "),
-      keymap.of([
-        indentWithTab,
-        {
-          key: "Mod-s",
-          run: formatDocument,
-        },
-      ]),
-      zigLanguage,
-      syntaxHighlighting(highlightStyle),
-      lspClient.plugin("file:///main.zig"),
-    ],
-  }),
-});
+(lspClient.workspace as PlaygroundWorkspace).createAndOpenUnnamedFile(zigMainSource);
 
 function revealOutputWindow() {
     const outputs = document.getElementById("output")!;
@@ -137,7 +108,8 @@ outputsRun.addEventListener("click", async () => {
     document.getElementById("output")!.appendChild(zigOutput);
     revealOutputWindow();
 
-    zigWorker.postMessage({
-        run: editor.state.doc.toString(),
-    });
+    // TODO
+    // zigWorker.postMessage({
+    //     run: editor.state.doc.toString(),
+    // });
 });
