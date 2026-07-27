@@ -4,7 +4,7 @@
 }
 
 .st-comment {
-  color: #aa7;
+  color: #aa7; /* this has poor contrast */
 }
 .st-keyword {
   color: #333;
@@ -17,7 +17,7 @@
   color: #d14;
 }
 .st-escapeSequence {
-  color: hsl(57, 90%, 25%); /* TODO */
+  color: hsl(57, 90%, 25%); /* ziglang.org doesn't highlight escape sequences so this has been made up  */
 }
 .st-label {
   font-style: italic;
