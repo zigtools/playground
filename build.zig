@@ -40,7 +40,7 @@ pub fn build(b: *std.Build) void {
     const zig_dependency = b.dependency("zig", .{
         .target = target,
         .optimize = optimize,
-        .@"version-string" = @as([]const u8, "0.17.0"),
+        .@"version-string" = @as([]const u8, "0.16.0"),
         .@"no-lib" = true,
         .dev = "wasm",
     });
