@@ -40,9 +40,9 @@ const editor = new EditorView({
 function revealOutputWindow() {
     const outputs = document.getElementById("output")!;
     outputs.scrollTo(0, outputs.scrollHeight!);
-    const editorHeightPercent = parseFloat(splitPane.style.getPropertyValue("--editor-height-percent"));
-    if (editorHeightPercent == 100) {
-        splitPane.style.setProperty("--editor-height-percent", `${resizeBarPreviousSize}%`);
+    const editorWidthPercent = parseFloat(splitPane.style.getPropertyValue("--editor-width-percent"));
+    if (editorWidthPercent == 100) {
+        splitPane.style.setProperty("--editor-width-percent", `${resizeBarPreviousSize}%`);
     }
 }
 
@@ -84,11 +84,12 @@ zigWorker.onmessage = (ev: MessageEvent) => {
 
 const splitPane = document.getElementById("split-pane")! as HTMLDivElement;
 const resizeBar = document.getElementById("resize-bar")! as HTMLDivElement;
-let resizeBarPreviousSize = 70;
+let resizeBarPreviousSize = 60;
 
 function onResizeBarMove(event: MouseEvent) {
-    const percent = Math.min(Math.max(10, event.clientY / splitPane.getBoundingClientRect().height * 100), 100);
-    splitPane.style.setProperty("--editor-height-percent", `${percent}%`);
+    const bounds = splitPane.getBoundingClientRect();
+    const percent = Math.min(Math.max(10, (event.clientX - bounds.left) / bounds.width * 100), 100);
+    splitPane.style.setProperty("--editor-width-percent", `${percent}%`);
 }
 function onResizeBarMouseUp(event: MouseEvent) {
     window.removeEventListener("mousemove", onResizeBarMove);
@@ -98,9 +99,9 @@ function onResizeBarMouseUp(event: MouseEvent) {
     document.body.style.removeProperty("cursor");
 
     // fully close the output window when it's almost closed
-    const editorHeightPercent = parseFloat(splitPane.style.getPropertyValue("--editor-height-percent"));
-    if (editorHeightPercent >= 90) {
-        splitPane.style.setProperty("--editor-height-percent", "100%");
+    const editorWidthPercent = parseFloat(splitPane.style.getPropertyValue("--editor-width-percent"));
+    if (editorWidthPercent >= 90) {
+        splitPane.style.setProperty("--editor-width-percent", "100%");
     }
 }
 
@@ -109,16 +110,16 @@ resizeBar.addEventListener("mousedown", event => {
         window.addEventListener("mousemove", onResizeBarMove);
         window.addEventListener("mouseup", onResizeBarMouseUp);
         document.body.style.userSelect = "none";
-        document.body.style.cursor = "row-resize";
+        document.body.style.cursor = "col-resize";
     }
 });
 resizeBar.addEventListener("dblclick", event => {
-    const editorHeightPercent = parseFloat(splitPane.style.getPropertyValue("--editor-height-percent"));
-    if (editorHeightPercent == 100) {
-        splitPane.style.setProperty("--editor-height-percent", `${resizeBarPreviousSize}%`);
+    const editorWidthPercent = parseFloat(splitPane.style.getPropertyValue("--editor-width-percent"));
+    if (editorWidthPercent == 100) {
+        splitPane.style.setProperty("--editor-width-percent", `${resizeBarPreviousSize}%`);
     } else {
-        resizeBarPreviousSize = editorHeightPercent;
-        splitPane.style.setProperty("--editor-height-percent", `100%`);
+        resizeBarPreviousSize = editorWidthPercent;
+        splitPane.style.setProperty("--editor-width-percent", `100%`);
     }
 });
 
