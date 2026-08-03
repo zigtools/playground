@@ -68,25 +68,27 @@ body {
 }
 
 main {
-    height: 100%;
-
-    flex-grow: 1;
-
-    height: calc(100% - 80px);
+    flex: 1 1 auto;
+    min-height: 0;
 }
 
-footer {
+header {
     display: flex;
-    padding: 0.5rem;
-    text-align: center;
-    align-items: center;
     justify-content: space-between;
+    padding: 0.5rem 0.75rem;
+    align-items: center;
     font-size: 0.85em;
     line-height: 1.25;
     background-color: var(--footer-background);
     color: var(--footer-text);
 
-    &>h1 {
+    .header-info {
+        display: flex;
+        gap: 0.65rem;
+        align-items: center;
+    }
+
+    .header-info>h1 {
         font-size: 1em;
         font-weight: 900;
         letter-spacing: -1px;
@@ -125,28 +127,30 @@ a {
 
 #split-pane {
     display: flex;
-
-    flex-direction: column;
+    flex-direction: row;
     height: 100%;
     overflow: hidden;
 
     &>*:first-child {
-        height: var(--editor-height-percent);
+        flex: 0 0 var(--editor-width-percent);
+        max-width: calc(100% - 0.5rem);
+        min-width: 0;
     }
 
     &>#resize-bar {
-        height: 0.5rem;
+        flex: 0 0 0.5rem;
     }
 
     &>*:last-child {
-        height: calc(100% - 0.5rem - var(--editor-height-percent));
+        flex: 1 1 auto;
+        min-width: 0;
     }
 }
 
 #resize-bar {
     position: relative;
-    width: 100%;
-    cursor: row-resize;
+    height: 100%;
+    cursor: col-resize;
     background-color: var(--resizer-color);
 }
 
@@ -155,7 +159,7 @@ a {
     position: absolute;
     width: 100%;
     height: 100%;
-    transform: scale(3);
+    transform: scaleX(3);
 }
 
 #resize-bar::after {
@@ -163,7 +167,7 @@ a {
     position: absolute;
     top: 50%;
     left: 50%;
-    width: 5rem;
+    height: 5rem;
     border: 2px dashed var(--resizer-pivot-color);
     border-radius: 100px;
     transform: translate(-50%,-50%);
@@ -221,10 +225,6 @@ ul {
 }
 
 #run {
-    position: fixed;
-    top: 1rem;
-    right: 1rem;
-    z-index: 1;
     border: none;
     border-radius: 3px;
     padding: 0.5rem 1.85rem;
@@ -236,8 +236,9 @@ ul {
 }
 
 #output {
+    min-width: 0;
     height: 100%;
-    overflow-y: auto;
+    overflow: auto;
     background-color: var(--output-background);
     color: var(--output-text);
 
