@@ -3,19 +3,12 @@
 
 :root {
     --button-background: hsl(40, 75%, 40%);
-    --output-background: hsl(0, 0%, 90%);
-    --footer-background: hsl(0, 0%, 95%);
-    --footer-text: black;
-    --output-text: black;
+    --output-background: black;
+    --output-text: white;
+    --header-background: hsl(0, 0%, 95%);
+    --header-text: black;
     --resizer-color: hsl(0, 0%, 75%);
     --resizer-pivot-color: hsl(0, 0%, 30%);
-
-    --output-zig-outdated-background: hsl(37, 20%, 25%);
-    --output-zig-latest-background: hsl(37, 40%, 80%);
-    --output-runner-outdated-background: hsl(200, 15%, 25%);
-    --output-runner-latest-background: hsl(200, 30%, 80%);
-    --output-outdated-text: hsl(0, 0%, 60%);
-    --output-latest-text: hsl(0, 0%, 0%);
 
     --tooltip-background: hsl(0, 0%, 100%);
     --tooltip-text: hsl(0, 0%, 0%);
@@ -27,19 +20,10 @@
 @media (prefers-color-scheme: dark) {
     :root {
         --button-background: hsl(40, 75%, 25%);
-        --output-background: hsl(0, 0%, 8%);
-        --footer-background: hsl(0, 0%, 10%);
-        --footer-text: hsl(0, 0%, 80%);
-        --output-text: hsl(0, 0%, 90%);
+        --header-background: hsl(0, 0%, 10%);
+        --header-text: hsl(0, 0%, 80%);
         --resizer-color: hsl(0, 0%, 18%);
         --resizer-pivot-color: hsl(0, 0%, 70%);
-
-        --output-zig-outdated-background: hsl(37, 93%, 5%);
-        --output-zig-latest-background: hsl(37, 93%, 10%);
-        --output-runner-outdated-background: hsl(200, 93%, 5%);
-        --output-runner-latest-background: hsl(200, 93%, 10%);
-        --output-outdated-text: hsl(0, 0%, 60%);
-        --output-latest-text: hsl(0, 0%, 100%);
 
         --tooltip-background: hsl(0, 0%, 0%);
         --tooltip-text: hsl(0, 0%, 100%);
@@ -79,8 +63,8 @@ header {
     align-items: center;
     font-size: 0.85em;
     line-height: 1.25;
-    background-color: var(--footer-background);
-    color: var(--footer-text);
+    background-color: var(--header-background);
+    color: var(--header-text);
 
     .header-info {
         display: flex;
@@ -178,6 +162,7 @@ code {
 
 .cm-editor {
     height: 100%;
+    font-size: 16px;
 }
 
 .cm-focused {
@@ -234,49 +219,35 @@ ul {
     color: var(--button-text);
 }
 
-#output {
+#output-pane {
     min-width: 0;
     height: 100%;
-    overflow: auto;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
     background-color: var(--output-background);
     color: var(--output-text);
+}
 
-    &>div {
-        white-space: pre;
-        font-family: monospace;
-    }
+#execution-status {
+    flex: 0 0 auto;
+    padding: 0.5rem 0.75rem;
+    border-bottom: 1px solid var(--resizer-color);
+    font-family: monospace;
+    font-size: 12px;
+    line-height: 1;
+    background-color: var(--header-background);
+    color: var(--header-text);
+}
 
-    &>.zig-output {
-        padding: 1rem;
-    
-        &.latest {
-            background-color: var(--output-zig-latest-background);
-            color: var(--output-latest-text);
-        }
+#output {
+    flex: 1 1 auto;
+    min-width: 0;
+    min-height: 0;
+    padding: 0.75rem;
+    overflow: hidden;
 
-        &:not(.latest) {
-            background-color: var(--output-zig-outdated-background);
-            color: var(--output-outdated-text);
-        }
-    }
-
-    &>.runner-output {
-        padding: 1rem;
-    
-        &.latest {
-            background-color: var(--output-runner-latest-background);
-            color: var(--output-latest-text);
-        }
-
-        &:not(.latest) {
-            background-color: var(--output-runner-outdated-background);
-            color: var(--output-outdated-text);
-        }
-    }
-
-    &>.output-split {
-        width: 100%;
-        height: 1px;
-        background-color: white;
+    &>.xterm {
+        height: 100%;
     }
 }
