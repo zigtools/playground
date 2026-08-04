@@ -36,10 +36,6 @@ async function run(source: string) {
         "wasi_snapshot_preview1": wasi.wasiImport,
     });
 
-    postMessage({
-        stderr: "Compiling...\n",
-    });
-
     try {
         // @ts-ignore
         const exitCode = wasi.start(instance);
