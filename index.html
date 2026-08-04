@@ -17,7 +17,17 @@
             <span>|</span>
             <span><span id="warning">Warning</span> Zig's self-hosted WebAssembly backend is still experimental!</span>
         </div>
-        <button id="run">Run</button>
+        <div class="header-controls">
+            <select id="example-select">
+                <option value="hello-world">Hello World</option>
+                <option value="ansi-text">ANSI Text</option>
+                <option value="fizz-buzz">FizzBuzz</option>
+                <option value="fibonacci">Fibonacci</option>
+                <option value="mandelbrot">Mandelbrot</option>
+                <option value="kitty-image">Kitty Image</option>
+            </select>
+            <button id="run">Run</button>
+        </div>
     </header>
 
     <main>
