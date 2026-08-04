@@ -18,19 +18,18 @@ async function run(wasmData: BufferSource) {
         "wasi_snapshot_preview1": wasi.wasiImport,
     });;
 
+    let exitCode = 0;
     try {
         // @ts-ignore
-        const exitCode = wasi.start(instance);
-
-        postMessage({
-            stderr: `\n\n---\nexit with exit code ${exitCode}\n---\n`,
-        });
+        exitCode = wasi.start(instance);
     } catch (err) {
         postMessage({ stderr: `${err}` });
+        exitCode = 1;
     }
 
     postMessage({
         done: true,
+        exitCode,
     });
 }
 
