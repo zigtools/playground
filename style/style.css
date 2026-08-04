@@ -74,6 +74,12 @@ header {
         align-items: center;
     }
 
+    .header-controls {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+    }
+
     .header-info>h1 {
         font-size: 1em;
         font-weight: 900;
@@ -209,6 +215,17 @@ ul {
     list-style: circle;
     margin-left: 2rem;
     line-height: 1.5;
+}
+
+#example-select {
+    border: 1px solid var(--resizer-color);
+    border-radius: 3px;
+    padding: 0.5rem 0.75rem;
+    font-size: 1em;
+    font-weight: 700;
+    cursor: pointer;
+    background-color: var(--header-background);
+    color: var(--header-text);
 }
 
 #run {
