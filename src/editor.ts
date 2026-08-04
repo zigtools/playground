@@ -7,6 +7,7 @@ import { indentUnit, syntaxHighlighting } from "@codemirror/language";
 import { zigLanguage } from "@ndim/codemirror-lang-zig";
 import { Terminal } from "@xterm/xterm";
 import { FitAddon } from "@xterm/addon-fit";
+import { ImageAddon } from "@xterm/addon-image";
 import "@xterm/xterm/css/xterm.css";
 import { editorTheme, highlightStyle } from "./theme.ts";
 import { lspClient } from "./lsp.ts";
@@ -15,13 +16,23 @@ import ZigWorker from './workers/zig.ts?worker';
 // @ts-ignore
 import RunnerWorker from './workers/runner.ts?worker';
 // @ts-ignore
-import zigMainSource from './main.zig?raw';
+import helloWorldSource from './examples/hello-world.zig?raw';
+// @ts-ignore
+import ansiTextSource from './examples/ansi-text.zig?raw';
+// @ts-ignore
+import fizzBuzzSource from './examples/fizz-buzz.zig?raw';
+// @ts-ignore
+import fibonacciSource from './examples/fibonacci.zig?raw';
+// @ts-ignore
+import mandelbrotSource from './examples/mandelbrot.zig?raw';
+// @ts-ignore
+import kittyImageSource from './examples/kitty-image.zig?raw';
 
 const editor = new EditorView({
   extensions: [],
   parent: document.getElementById("editor")!,
   state: EditorState.create({
-    doc: zigMainSource,
+    doc: helloWorldSource,
     extensions: [
       basicSetup,
       editorTheme,
@@ -57,6 +68,7 @@ const terminal = new Terminal({
 });
 const fitAddon = new FitAddon();
 terminal.loadAddon(fitAddon);
+terminal.loadAddon(new ImageAddon());
 terminal.open(output);
 terminal.write("\x1b[?25l"); // hide cursor
 fitAddon.fit();
@@ -152,6 +164,27 @@ resizeBar.addEventListener("dblclick", event => {
 });
 
 const outputsRun = document.getElementById("run")! as HTMLButtonElement;
+const exampleSelect = document.getElementById("example-select")! as HTMLSelectElement;
+
+const examples: Record<string, string> = {
+    "hello-world": helloWorldSource,
+    "ansi-text": ansiTextSource,
+    "fizz-buzz": fizzBuzzSource,
+    "fibonacci": fibonacciSource,
+    "mandelbrot": mandelbrotSource,
+    "kitty-image": kittyImageSource,
+};
+
+exampleSelect.addEventListener("change", () => {
+    editor.dispatch({
+        changes: {
+            from: 0,
+            to: editor.state.doc.length,
+            insert: examples[exampleSelect.value],
+        },
+    });
+});
+
 outputsRun.addEventListener("click", async () => {
     if (isCompiling) return;
 
