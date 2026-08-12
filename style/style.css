@@ -3,19 +3,12 @@
 
 :root {
     --button-background: hsl(40, 75%, 40%);
-    --output-background: hsl(0, 0%, 90%);
-    --footer-background: hsl(0, 0%, 95%);
-    --footer-text: black;
-    --output-text: black;
+    --output-background: black;
+    --output-text: white;
+    --header-background: hsl(0, 0%, 95%);
+    --header-text: black;
     --resizer-color: hsl(0, 0%, 75%);
     --resizer-pivot-color: hsl(0, 0%, 30%);
-
-    --output-zig-outdated-background: hsl(37, 20%, 25%);
-    --output-zig-latest-background: hsl(37, 40%, 80%);
-    --output-runner-outdated-background: hsl(200, 15%, 25%);
-    --output-runner-latest-background: hsl(200, 30%, 80%);
-    --output-outdated-text: hsl(0, 0%, 60%);
-    --output-latest-text: hsl(0, 0%, 0%);
 
     --tooltip-background: hsl(0, 0%, 100%);
     --tooltip-text: hsl(0, 0%, 0%);
@@ -27,19 +20,10 @@
 @media (prefers-color-scheme: dark) {
     :root {
         --button-background: hsl(40, 75%, 25%);
-        --output-background: hsl(0, 0%, 8%);
-        --footer-background: hsl(0, 0%, 10%);
-        --footer-text: hsl(0, 0%, 80%);
-        --output-text: hsl(0, 0%, 90%);
+        --header-background: hsl(0, 0%, 10%);
+        --header-text: hsl(0, 0%, 80%);
         --resizer-color: hsl(0, 0%, 18%);
         --resizer-pivot-color: hsl(0, 0%, 70%);
-
-        --output-zig-outdated-background: hsl(37, 93%, 5%);
-        --output-zig-latest-background: hsl(37, 93%, 10%);
-        --output-runner-outdated-background: hsl(200, 93%, 5%);
-        --output-runner-latest-background: hsl(200, 93%, 10%);
-        --output-outdated-text: hsl(0, 0%, 60%);
-        --output-latest-text: hsl(0, 0%, 100%);
 
         --tooltip-background: hsl(0, 0%, 0%);
         --tooltip-text: hsl(0, 0%, 100%);
@@ -68,25 +52,33 @@ body {
 }
 
 main {
-    height: 100%;
-
-    flex-grow: 1;
-
-    height: calc(100% - 80px);
+    flex: 1 1 auto;
+    min-height: 0;
 }
 
-footer {
+header {
     display: flex;
-    padding: 0.5rem;
-    text-align: center;
-    align-items: center;
     justify-content: space-between;
+    padding: 0.5rem 0.75rem;
+    align-items: center;
     font-size: 0.85em;
     line-height: 1.25;
-    background-color: var(--footer-background);
-    color: var(--footer-text);
+    background-color: var(--header-background);
+    color: var(--header-text);
 
-    &>h1 {
+    .header-info {
+        display: flex;
+        gap: 0.65rem;
+        align-items: center;
+    }
+
+    .header-controls {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+    }
+
+    .header-info>h1 {
         font-size: 1em;
         font-weight: 900;
         letter-spacing: -1px;
@@ -125,28 +117,29 @@ a {
 
 #split-pane {
     display: flex;
-
-    flex-direction: column;
+    flex-direction: row;
     height: 100%;
     overflow: hidden;
 
     &>*:first-child {
-        height: var(--editor-height-percent);
+        flex: 0 0 var(--editor-width-percent);
+        min-width: 0;
     }
 
     &>#resize-bar {
-        height: 0.5rem;
+        flex: 0 0 0.5rem;
     }
 
     &>*:last-child {
-        height: calc(100% - 0.5rem - var(--editor-height-percent));
+        flex: 1 1 auto;
+        min-width: 0;
     }
 }
 
 #resize-bar {
     position: relative;
-    width: 100%;
-    cursor: row-resize;
+    height: 100%;
+    cursor: col-resize;
     background-color: var(--resizer-color);
 }
 
@@ -155,7 +148,7 @@ a {
     position: absolute;
     width: 100%;
     height: 100%;
-    transform: scale(3);
+    transform: scaleX(3);
 }
 
 #resize-bar::after {
@@ -163,7 +156,7 @@ a {
     position: absolute;
     top: 50%;
     left: 50%;
-    width: 5rem;
+    height: 5rem;
     border: 2px dashed var(--resizer-pivot-color);
     border-radius: 100px;
     transform: translate(-50%,-50%);
@@ -173,8 +166,14 @@ code {
     font-family: monospace;
 }
 
+/* prevent white flash on page reload */
+#editor {
+    background-color: var(--code-background-color);
+}
+
 .cm-editor {
     height: 100%;
+    font-size: 16px;
 }
 
 .cm-focused {
@@ -220,11 +219,18 @@ ul {
     line-height: 1.5;
 }
 
+#example-select {
+    border: 1px solid var(--resizer-color);
+    border-radius: 3px;
+    padding: 0.5rem 0.75rem;
+    font-size: 1em;
+    font-weight: 700;
+    cursor: pointer;
+    background-color: var(--header-background);
+    color: var(--header-text);
+}
+
 #run {
-    position: fixed;
-    top: 1rem;
-    right: 1rem;
-    z-index: 1;
     border: none;
     border-radius: 3px;
     padding: 0.5rem 1.85rem;
@@ -235,48 +241,35 @@ ul {
     color: var(--button-text);
 }
 
-#output {
+#output-pane {
+    min-width: 0;
     height: 100%;
-    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
     background-color: var(--output-background);
     color: var(--output-text);
+}
 
-    &>div {
-        white-space: pre;
-        font-family: monospace;
-    }
+#execution-status {
+    flex: 0 0 auto;
+    padding: 0.5rem 0.75rem;
+    border-bottom: 1px solid var(--resizer-color);
+    font-family: monospace;
+    font-size: 12px;
+    line-height: 1;
+    background-color: var(--header-background);
+    color: var(--header-text);
+}
 
-    &>.zig-output {
-        padding: 1rem;
-    
-        &.latest {
-            background-color: var(--output-zig-latest-background);
-            color: var(--output-latest-text);
-        }
+#output {
+    flex: 1 1 auto;
+    min-width: 0;
+    min-height: 0;
+    padding: 0.75rem;
+    overflow: hidden;
 
-        &:not(.latest) {
-            background-color: var(--output-zig-outdated-background);
-            color: var(--output-outdated-text);
-        }
-    }
-
-    &>.runner-output {
-        padding: 1rem;
-    
-        &.latest {
-            background-color: var(--output-runner-latest-background);
-            color: var(--output-latest-text);
-        }
-
-        &:not(.latest) {
-            background-color: var(--output-runner-outdated-background);
-            color: var(--output-outdated-text);
-        }
-    }
-
-    &>.output-split {
-        width: 100%;
-        height: 1px;
-        background-color: white;
+    &>.xterm {
+        height: 100%;
     }
 }
