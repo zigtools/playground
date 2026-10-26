@@ -2,15 +2,15 @@
     .name = .playground,
     .version = "0.0.0",
     .fingerprint = 0xdc188848360fd988, // Changing this has security and trust implications.
-    .minimum_zig_version = "0.16.0",
+    .minimum_zig_version = "0.17.0",
     .dependencies = .{
         .zls = .{
-            .url = "git+https://github.com/zigtools/zls?ref=0.16.0#494486203c3a48927f2383aa3d5ce5fca112186d",
-            .hash = "zls-0.16.0-rmm5fs_JJgBG3dk5HwYK1FylE2_LMN0BYpX57tPzT-Xc",
+            .url = "git+https://github.com/zigtools/zls?ref=0.17.0#542462c4ddf045493fa9ca028ee6bc3f38b2754a",
+            .hash = "zls-0.17.0-rmm5fjYwHAAfoBoodSZ8k3NYPa8ZZG60JPlOTGFrAhTw",
         },
         .zig = .{
-            .url = "git+https://github.com/zigtools/zig?ref=wasm32-wasi#1c430bc130989d285723de8b7aa8e3c77297a266",
-            .hash = "zig-0.0.0-Fp4XJHzK5Q2xL7r676PlbSvBhz_af_mGXkGPVaXvf_Kx",
+            .url = "git+https://codeberg.org/ziglang/zig?ref=0.17.0#7647adab80dd088f4de3610fd245915a912eb6ad",
+            .hash = "zig-0.0.0-Fp4XJNPbSg7JHi19U9bkBViqpw1CEGENf1JhYBLHWjMq",
         },
     },
     .paths = .{""},
