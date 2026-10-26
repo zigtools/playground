@@ -5,6 +5,10 @@ import { formatDocument } from "@codemirror/lsp-client";
 import { indentWithTab } from "@codemirror/commands";
 import { indentUnit, syntaxHighlighting } from "@codemirror/language";
 import { zigLanguage } from "@ndim/codemirror-lang-zig";
+import { Terminal } from "@xterm/xterm";
+import { FitAddon } from "@xterm/addon-fit";
+import { ImageAddon } from "@xterm/addon-image";
+import "@xterm/xterm/css/xterm.css";
 import { editorTheme, highlightStyle } from "./theme.ts";
 import { lspClient } from "./lsp.ts";
 // @ts-ignore
@@ -12,13 +16,23 @@ import ZigWorker from './workers/zig.ts?worker';
 // @ts-ignore
 import RunnerWorker from './workers/runner.ts?worker';
 // @ts-ignore
-import zigMainSource from './main.zig?raw';
+import helloWorldSource from './examples/hello-world.zig?raw';
+// @ts-ignore
+import ansiTextSource from './examples/ansi-text.zig?raw';
+// @ts-ignore
+import fizzBuzzSource from './examples/fizz-buzz.zig?raw';
+// @ts-ignore
+import fibonacciSource from './examples/fibonacci.zig?raw';
+// @ts-ignore
+import mandelbrotSource from './examples/mandelbrot.zig?raw';
+// @ts-ignore
+import kittyImageSource from './examples/kitty-image.zig?raw';
 
 const editor = new EditorView({
   extensions: [],
   parent: document.getElementById("editor")!,
   state: EditorState.create({
-    doc: zigMainSource,
+    doc: helloWorldSource,
     extensions: [
       basicSetup,
       editorTheme,
@@ -37,58 +51,85 @@ const editor = new EditorView({
   }),
 });
 
+const output = document.getElementById("output")!;
+const executionStatus = document.getElementById("execution-status")!;
+const outputStyle = getComputedStyle(document.documentElement);
+const terminal = new Terminal({
+    disableStdin: true,
+    convertEol: true,
+    cursorBlink: false,
+    fontSize: 16,
+    fontFamily: "monospace",
+    scrollback: 1000,
+    theme: {
+        background: outputStyle.getPropertyValue("--output-background").trim(),
+        foreground: outputStyle.getPropertyValue("--output-text").trim(),
+    },
+});
+const fitAddon = new FitAddon();
+terminal.loadAddon(fitAddon);
+terminal.loadAddon(new ImageAddon());
+terminal.open(output);
+terminal.write("\x1b[?25l"); // hide cursor
+fitAddon.fit();
+new ResizeObserver(() => fitAddon.fit()).observe(output);
+
 function revealOutputWindow() {
-    const outputs = document.getElementById("output")!;
-    outputs.scrollTo(0, outputs.scrollHeight!);
-    const editorHeightPercent = parseFloat(splitPane.style.getPropertyValue("--editor-height-percent"));
-    if (editorHeightPercent == 100) {
-        splitPane.style.setProperty("--editor-height-percent", `${resizeBarPreviousSize}%`);
+    const editorWidthPercent = parseFloat(splitPane.style.getPropertyValue("--editor-width-percent"));
+    if (editorWidthPercent == 100) {
+        splitPane.style.setProperty("--editor-width-percent", `${resizeBarPreviousSize}%`);
     }
 }
 
 let zigWorker = new ZigWorker();
+let compilationStartedAt = 0;
+let isCompiling = false;
+let executionId = 0;
 
 zigWorker.onmessage = (ev: MessageEvent) => {
     if (ev.data.stderr) {
-        document.querySelector(".zig-output:last-child")!.textContent += ev.data.stderr;
+        terminal.write(ev.data.stderr);
         revealOutputWindow();
         return;
-    } else if (ev.data.failed) {
-        const outputSplit = document.createElement("div");
-        outputSplit.classList.add("output-split");
-        document.getElementById("output")!.appendChild(outputSplit);
     } else if (ev.data.compiled) {
-        let runnerWorker = new RunnerWorker();
+        const compilationTime = Math.round(performance.now() - compilationStartedAt);
+        const currentExecutionId = executionId;
+        const runStartedAt = performance.now();
+        isCompiling = false;
+        executionStatus.textContent = `Compiled in ${compilationTime} ms | Running...`;
 
-        const zigOutput = document.createElement("div");
-        zigOutput.classList.add("runner-output");
-        zigOutput.classList.add("latest");
-        document.getElementById("output")!.appendChild(zigOutput);
+        let runnerWorker = new RunnerWorker();
 
         runnerWorker.postMessage({ run: ev.data.compiled });
 
         runnerWorker.onmessage = (rev: MessageEvent) => {
             if (rev.data.stderr) {
-                document.querySelector(".runner-output:last-child")!.textContent += rev.data.stderr;
+                terminal.write(rev.data.stderr);
                 revealOutputWindow();
                 return;
             } else if (rev.data.done) {
+                if (currentExecutionId == executionId) {
+                    const runTime = Math.round(performance.now() - runStartedAt);
+                    executionStatus.textContent = `Compiled in ${compilationTime} ms | Ran in ${runTime} ms | Exit code ${rev.data.exitCode}`;
+                }
                 runnerWorker.terminate();
-                const outputSplit = document.createElement("div");
-                outputSplit.classList.add("output-split");
-                document.getElementById("output")!.appendChild(outputSplit);
             }
         }
+    } else if (ev.data.failed) {
+        const compilationTime = Math.round(performance.now() - compilationStartedAt);
+        isCompiling = false;
+        executionStatus.textContent = `Compilation failed in ${compilationTime} ms`;
     }
 }
 
 const splitPane = document.getElementById("split-pane")! as HTMLDivElement;
 const resizeBar = document.getElementById("resize-bar")! as HTMLDivElement;
-let resizeBarPreviousSize = 70;
+let resizeBarPreviousSize = 60;
 
 function onResizeBarMove(event: MouseEvent) {
-    const percent = Math.min(Math.max(10, event.clientY / splitPane.getBoundingClientRect().height * 100), 100);
-    splitPane.style.setProperty("--editor-height-percent", `${percent}%`);
+    const bounds = splitPane.getBoundingClientRect();
+    const percent = Math.min(Math.max(10, (event.clientX - bounds.left) / bounds.width * 100), 100);
+    splitPane.style.setProperty("--editor-width-percent", `${percent}%`);
 }
 function onResizeBarMouseUp(event: MouseEvent) {
     window.removeEventListener("mousemove", onResizeBarMove);
@@ -98,9 +139,9 @@ function onResizeBarMouseUp(event: MouseEvent) {
     document.body.style.removeProperty("cursor");
 
     // fully close the output window when it's almost closed
-    const editorHeightPercent = parseFloat(splitPane.style.getPropertyValue("--editor-height-percent"));
-    if (editorHeightPercent >= 90) {
-        splitPane.style.setProperty("--editor-height-percent", "100%");
+    const editorWidthPercent = parseFloat(splitPane.style.getPropertyValue("--editor-width-percent"));
+    if (editorWidthPercent >= 90) {
+        splitPane.style.setProperty("--editor-width-percent", "100%");
     }
 }
 
@@ -109,32 +150,50 @@ resizeBar.addEventListener("mousedown", event => {
         window.addEventListener("mousemove", onResizeBarMove);
         window.addEventListener("mouseup", onResizeBarMouseUp);
         document.body.style.userSelect = "none";
-        document.body.style.cursor = "row-resize";
+        document.body.style.cursor = "col-resize";
     }
 });
 resizeBar.addEventListener("dblclick", event => {
-    const editorHeightPercent = parseFloat(splitPane.style.getPropertyValue("--editor-height-percent"));
-    if (editorHeightPercent == 100) {
-        splitPane.style.setProperty("--editor-height-percent", `${resizeBarPreviousSize}%`);
+    const editorWidthPercent = parseFloat(splitPane.style.getPropertyValue("--editor-width-percent"));
+    if (editorWidthPercent == 100) {
+        splitPane.style.setProperty("--editor-width-percent", `${resizeBarPreviousSize}%`);
     } else {
-        resizeBarPreviousSize = editorHeightPercent;
-        splitPane.style.setProperty("--editor-height-percent", `100%`);
+        resizeBarPreviousSize = editorWidthPercent;
+        splitPane.style.setProperty("--editor-width-percent", `100%`);
     }
 });
 
 const outputsRun = document.getElementById("run")! as HTMLButtonElement;
-outputsRun.addEventListener("click", async () => {
-    for (const zo of document.querySelectorAll(".zig-output")) {
-        zo.classList.remove("latest");
-    }
-    for (const ro of document.querySelectorAll(".runner-output")) {
-        ro.classList.remove("latest");
-    }
+const exampleSelect = document.getElementById("example-select")! as HTMLSelectElement;
 
-    const zigOutput = document.createElement("div");
-    zigOutput.classList.add("zig-output");
-    zigOutput.classList.add("latest");
-    document.getElementById("output")!.appendChild(zigOutput);
+const examples: Record<string, string> = {
+    "hello-world": helloWorldSource,
+    "ansi-text": ansiTextSource,
+    "fizz-buzz": fizzBuzzSource,
+    "fibonacci": fibonacciSource,
+    "mandelbrot": mandelbrotSource,
+    "kitty-image": kittyImageSource,
+};
+
+exampleSelect.addEventListener("change", () => {
+    editor.dispatch({
+        changes: {
+            from: 0,
+            to: editor.state.doc.length,
+            insert: examples[exampleSelect.value],
+        },
+    });
+});
+
+outputsRun.addEventListener("click", async () => {
+    if (isCompiling) return;
+
+    isCompiling = true;
+    executionId += 1;
+    compilationStartedAt = performance.now();
+    executionStatus.textContent = "Compiling...";
+    terminal.reset();
+    terminal.write("\x1b[?25l"); // hide cursor
     revealOutputWindow();
 
     zigWorker.postMessage({

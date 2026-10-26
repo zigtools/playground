@@ -9,21 +9,38 @@
     <link rel="stylesheet" href="style/style.css">
 </head>
 <body>
-    <button id="run">Run</button>
+    <header>
+        <div class="header-info">
+            <h1><a href="https://playground.zigtools.org">playground</a></h1>
+            <span>|</span>
+            <span>A <a href="https://zigtools.org">zigtools</a> initiative.</span>
+            <span>|</span>
+            <span><span id="warning">Warning</span> Zig's self-hosted WebAssembly backend is still experimental!</span>
+        </div>
+        <div class="header-controls">
+            <select id="example-select" autocomplete="off">
+                <option value="" disabled selected hidden>Select Example</option>
+                <option value="hello-world">Hello World</option>
+                <option value="ansi-text">ANSI Text</option>
+                <option value="fizz-buzz">FizzBuzz</option>
+                <option value="fibonacci">Fibonacci</option>
+                <option value="mandelbrot">Mandelbrot</option>
+                <option value="kitty-image">Kitty Image</option>
+            </select>
+            <button id="run">Run</button>
+        </div>
+    </header>
 
     <main>
-        <div id="split-pane" style="--editor-height-percent: 100%;">
+        <div id="split-pane" style="--editor-width-percent: 100%;">
             <div id="editor"></div>
             <div id="resize-bar"></div>
-            <div id="output"></div>
+            <div id="output-pane">
+                <div id="execution-status">&nbsp;</div>
+                <div id="output"></div>
+            </div>
         </div>
     </main>
-
-    <footer>
-        <h1><a href="https://playground.zigtools.org">playground</a></h1>
-        <span><span id="warning">Warning</span> Zig's self-hosted WebAssembly backend is still experimental!</span>
-        <span>A <a href="https://zigtools.org">zigtools</a> initiative.</span>
-    </footer>
 
     <script src="/src/editor.ts" type="module"></script>
 </body>
