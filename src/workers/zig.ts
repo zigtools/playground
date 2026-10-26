@@ -8,15 +8,15 @@ async function run(source: string) {
     currentlyRunning = true;
 
     const libDirectory = await getLatestZigArchive();
-    const libCompilerRt = await fetch(new URL("../../zig-out/libcompiler_rt.a", import.meta.url));
+    const compilerRtObject = await fetch(new URL("../../zig-out/compiler_rt.o", import.meta.url));
 
     const args = [
         "zig.wasm",
         "build-exe",
         "main.zig",
-        "libcompiler_rt.a",
+        "compiler_rt.o",
         "-fno-compiler-rt", // manually linked because the self hosted webassembly backend cannot compile it by itself
-        "-fno-entry", // prevent the native webassembly backend from adding a start function to the module
+        "-fno-ubsan-rt",
     ];
     const env: string[] = [];
     const fds = [
@@ -25,7 +25,7 @@ async function run(source: string) {
         stderrOutput(), // stderr
         new PreopenDirectory(".", new Map<string, Inode>([
             ["main.zig", new File(new TextEncoder().encode(source))],
-            ["libcompiler_rt.a", new File(await libCompilerRt.arrayBuffer())]
+            ["compiler_rt.o", new File(await compilerRtObject.arrayBuffer())]
         ])),
         new PreopenDirectory("/lib", libDirectory.contents),
         new PreopenDirectory("/cache", new Map()),

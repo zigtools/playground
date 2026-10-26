@@ -2,7 +2,7 @@ const std = @import("std");
 
 pub fn build(b: *std.Build) void {
     const target = b.resolveTargetQuery(.{ .cpu_arch = .wasm32, .os_tag = .wasi });
-    const optimize: std.builtin.OptimizeMode = b.standardOptimizeOption(.{ .preferred_optimize_mode = .ReleaseSmall });
+    const optimize = b.standardOptimizeOption(.{ .preferred_optimize_mode = .small });
 
     const enable_wasm_opt = b.option(bool, "wasm-opt", "Run wasm-opt") orelse false;
 
@@ -40,14 +40,13 @@ pub fn build(b: *std.Build) void {
     const zig_dependency = b.dependency("zig", .{
         .target = target,
         .optimize = optimize,
-        .@"version-string" = @as([]const u8, "0.16.0"),
+        .@"version-string" = @as([]const u8, "0.17.0"),
         .@"no-lib" = true,
         .dev = "wasm",
     });
     zig_step.dependOn(installArtifact(b, zig_dependency.artifact("zig"), enable_wasm_opt));
 
-    const lib_compiler_rt = b.addLibrary(.{
-        .linkage = .static,
+    const lib_compiler_rt = b.addObject(.{
         .name = "compiler_rt",
         .root_module = b.createModule(.{
             .root_source_file = zig_dependency.path("lib/compiler_rt.zig"),
@@ -58,7 +57,7 @@ pub fn build(b: *std.Build) void {
     compiler_rt_step.dependOn(&b.addInstallArtifact(lib_compiler_rt, .{ .dest_dir = .{ .override = .prefix } }).step);
 
     const run_tar = b.addSystemCommand(&.{ "tar", "-czf" });
-    const zig_tar_gz = run_tar.addOutputFileArg("zig.tar.gz");
+    const zig_tar_gz = run_tar.addOutputFileArg2("zig.tar.gz", .{});
     tarball_step.dependOn(&b.addInstallFile(zig_tar_gz, "zig.tar.gz").step);
     run_tar.addArg("-C");
     run_tar.addDirectoryArg(zig_dependency.path("."));
@@ -78,7 +77,7 @@ fn installArtifact(b: *std.Build, artifact: *std.Build.Step.Compile, enable_wasm
         wasm_opt.addArtifactArg(artifact);
         wasm_opt.addArg("-o");
         const file_name = b.fmt("{s}.wasm", .{artifact.name});
-        const exe = wasm_opt.addOutputFileArg(file_name);
+        const exe = wasm_opt.addOutputFileArg2(file_name, .{});
         return &b.addInstallBinFile(exe, file_name).step;
     } else {
         return &b.addInstallArtifact(artifact, .{}).step;
