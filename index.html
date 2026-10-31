@@ -1,47 +1,50 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zigtools Playground</title>
+	<head>
+		<meta charset="UTF-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title>Zigtools Playground</title>
 
-    <link rel="stylesheet" href="style/style.css">
-</head>
-<body>
-    <header>
-        <div class="header-info">
-            <h1><a href="https://playground.zigtools.org">playground</a></h1>
-            <span>|</span>
-            <span>A <a href="https://zigtools.org">zigtools</a> initiative.</span>
-            <span>|</span>
-            <span><span id="warning">Warning</span> Zig's self-hosted WebAssembly backend is still experimental!</span>
-        </div>
-        <div class="header-controls">
-            <select id="example-select" autocomplete="off">
-                <option value="" disabled selected hidden>Select Example</option>
-                <option value="hello-world">Hello World</option>
-                <option value="ansi-text">ANSI Text</option>
-                <option value="fizz-buzz">FizzBuzz</option>
-                <option value="fibonacci">Fibonacci</option>
-                <option value="mandelbrot">Mandelbrot</option>
-                <option value="kitty-image">Kitty Image</option>
-            </select>
-            <button id="run">Run</button>
-        </div>
-    </header>
+		<link rel="stylesheet" href="style/style.css">
+	</head>
+	<body>
+		<header>
+			<div class="header-info">
+				<h1><a href="https://playground.zigtools.org">playground</a></h1>
+				<span>|</span>
+				<span>A <a href="https://zigtools.org">zigtools</a>
+					initiative.</span>
+				<span>|</span>
+				<span><span id="warning">Warning</span>
+				Zig's self-hosted WebAssembly backend is still experimental!</span>
+			</div>
+			<div class="header-controls">
+				<select id="example-select" autocomplete="off">
+					<option value="" disabled selected hidden>Select Example</option>
+					<option value="hello-world">Hello World</option>
+					<option value="ansi-text">ANSI Text</option>
+					<option value="fizz-buzz">FizzBuzz</option>
+					<option value="fibonacci">Fibonacci</option>
+					<option value="mandelbrot">Mandelbrot</option>
+					<option value="kitty-image">Kitty Image</option>
+				</select>
+				<button id="run">Run</button>
+			</div>
+		</header>
 
-    <main>
-        <div id="split-pane" style="--editor-width-percent: 100%;">
-            <div id="editor"></div>
-            <div id="resize-bar"></div>
-            <div id="output-pane">
-                <div id="execution-status">&nbsp;</div>
-                <div id="output"></div>
-            </div>
-        </div>
-    </main>
+		<main>
+			<div id="tab-bar" style="display: none;"></div>
+			<div id="split-pane" style="--editor-width-percent: 100%;">
+				<div id="editor"></div>
+				<div id="resize-bar"></div>
+				<div id="output-pane">
+					<div id="execution-status">&nbsp;</div>
+					<div id="output"></div>
+				</div>
+			</div>
+		</main>
 
-    <script src="/src/editor.ts" type="module"></script>
-</body>
+		<script src="/src/editor.ts" type="module"></script>
+	</body>
 </html>

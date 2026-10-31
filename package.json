@@ -21,7 +21,8 @@
     "@xterm/addon-image": "^0.10.0-beta.292",
     "@xterm/xterm": "^6.1.0-beta.292",
     "codemirror": "^6.0.1",
-    "vscode-languageserver-protocol": "^3.17.3"
+    "vscode-languageserver-protocol": "^3.17.3",
+    "dompurify": "^3.4.12"
   },
   "devDependencies": {
     "typescript": "^7.0.2",

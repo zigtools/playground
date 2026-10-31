@@ -1,16 +1,8 @@
-import { EditorState } from "@codemirror/state";
-import { keymap } from "@codemirror/view";
-import { EditorView, basicSetup } from "codemirror";
-import { formatDocument } from "@codemirror/lsp-client";
-import { indentWithTab } from "@codemirror/commands";
-import { indentUnit, syntaxHighlighting } from "@codemirror/language";
-import { zigLanguage } from "@ndim/codemirror-lang-zig";
+import { lspClient, PlaygroundWorkspace } from "./lsp.ts";
 import { Terminal } from "@xterm/xterm";
 import { FitAddon } from "@xterm/addon-fit";
 import { ImageAddon } from "@xterm/addon-image";
 import "@xterm/xterm/css/xterm.css";
-import { editorTheme, highlightStyle } from "./theme.ts";
-import { lspClient } from "./lsp.ts";
 // @ts-ignore
 import ZigWorker from './workers/zig.ts?worker';
 // @ts-ignore
@@ -28,28 +20,7 @@ import mandelbrotSource from './examples/mandelbrot.zig?raw';
 // @ts-ignore
 import kittyImageSource from './examples/kitty-image.zig?raw';
 
-const editor = new EditorView({
-  extensions: [],
-  parent: document.getElementById("editor")!,
-  state: EditorState.create({
-    doc: helloWorldSource,
-    extensions: [
-      basicSetup,
-      editorTheme,
-      indentUnit.of("    "),
-      keymap.of([
-        indentWithTab,
-        {
-          key: "Mod-s",
-          run: formatDocument,
-        },
-      ]),
-      zigLanguage,
-      syntaxHighlighting(highlightStyle),
-      lspClient.plugin("file:///main.zig"),
-    ],
-  }),
-});
+(lspClient.workspace as PlaygroundWorkspace).createAndOpenUnnamedFile(helloWorldSource);
 
 const output = document.getElementById("output")!;
 const executionStatus = document.getElementById("execution-status")!;
@@ -196,7 +167,8 @@ outputsRun.addEventListener("click", async () => {
     terminal.write("\x1b[?25l"); // hide cursor
     revealOutputWindow();
 
-    zigWorker.postMessage({
-        run: editor.state.doc.toString(),
-    });
+    // TODO
+    // zigWorker.postMessage({
+    //     run: editor.state.doc.toString(),
+    // });
 });

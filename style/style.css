@@ -10,6 +10,9 @@
     --resizer-color: hsl(0, 0%, 75%);
     --resizer-pivot-color: hsl(0, 0%, 30%);
 
+    --tab-background: hsl(0, 0%, 90%);
+    --tab-hover-background: hsl(0, 0%, 93%);
+
     --tooltip-background: hsl(0, 0%, 100%);
     --tooltip-text: hsl(0, 0%, 0%);
 
@@ -26,6 +29,9 @@
         --header-text: hsl(0, 0%, 80%);
         --resizer-color: hsl(0, 0%, 18%);
         --resizer-pivot-color: hsl(0, 0%, 70%);
+
+        --tab-background: hsl(0, 0%, 18%);
+        --tab-hover-background: hsl(0, 0%, 23%);
 
         --tooltip-background: hsl(0, 0%, 0%);
         --tooltip-text: hsl(0, 0%, 100%);
@@ -123,7 +129,7 @@ a {
     height: 100%;
     overflow: hidden;
 
-    &>*:first-child {
+    &>#editor {
         flex: 0 0 var(--editor-width-percent);
         max-width: calc(100% - 0.5rem);
         min-width: 0;
@@ -134,8 +140,78 @@ a {
     }
 
     &>*:last-child {
-        flex: 1 1 auto;
+        flex: 1 1 0;
         min-width: 0;
+    }
+}
+
+#tab-bar {
+    display: flex;
+    height: 2em;
+    width: 100%;
+    font-size: smaller;
+    overflow: scroll;
+    scrollbar-width: thin;
+    background-color: var(--tab-background);
+    
+    .tab {
+        flex: 1 1 0px;
+        min-width: 100px;
+        max-width: 160px;
+        overflow: clip;
+        text-overflow: ellipsis;
+        align-content: center;
+        padding: 4px;
+        border-width: 0px 1px 1px 0px;
+        border-radius: 0px;
+        border-color: rgba(128, 128, 128, 50%);
+
+        background-color: var(--tab-background);
+        color: var(--output-text);
+    }
+
+    .tab.active {
+        background-color: var(--code-background-color);
+        border-bottom-width: 0px;
+    }
+
+    .tab:not(.active):hover {
+        background-color: var(--tab-hover-background);
+    }
+}
+
+#tab-bar {
+    display: flex;
+    height: 2em;
+    width: 100%;
+    font-size: smaller;
+    overflow: scroll;
+    scrollbar-width: thin;
+    background-color: var(--tab-background);
+    
+    .tab {
+        flex: 1 1 0px;
+        min-width: 100px;
+        max-width: 160px;
+        overflow: clip;
+        text-overflow: ellipsis;
+        align-content: center;
+        padding: 4px;
+        border-width: 0px 1px 1px 0px;
+        border-radius: 0px;
+        border-color: rgba(128, 128, 128, 50%);
+
+        background-color: var(--tab-background);
+        color: var(--output-text);
+    }
+
+    .tab.active {
+        background-color: var(--code-background-color);
+        border-bottom-width: 0px;
+    }
+
+    .tab:not(.active):hover {
+        background-color: var(--tab-hover-background);
     }
 }
 
