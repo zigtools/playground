@@ -90,14 +90,6 @@ header {
             text-decoration: none;
         }
     }
-
-    #warning {
-        margin-right: 0.25rem;
-        border-radius: 3px;
-        padding: 0.075rem 0.30rem;
-        background-color: var(--button-background);
-        color: var(--button-text);
-    }
 }
 
 p {
